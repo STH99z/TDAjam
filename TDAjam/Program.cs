@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using System.Drawing;
 using DxLibDLL;
 
@@ -24,9 +23,8 @@ namespace TDAjam
             //TestingUnit.TestSingleAnimation();
             //TestingUnit.TestingInput();
             //TestingUnit.TestingClocking();
-            //little change.
-            //let's see if the git works fine.
-            TestingUnit.TestingAudio();
+            //TestingUnit.TestingAudio();
+            TestingUnit.Tt_Position();
 
             DXcs.DisposeAll();
             DX.DxLib_End();
@@ -134,8 +132,8 @@ namespace TDAjam
             {
                 DXcs.FrameBegin();
 
-                DXcs.DrawDebug("ticks:" + DXcs.oneFrameCalcTime);
-                DXcs.DrawDebug("ms:" + (float)DXcs.oneFrameCalcTime / 10000);
+                DXcs.DrawDebug($"ticks:{DXcs.oneFrameCalcTime}");
+                DXcs.DrawDebug($"ms:{(float)DXcs.oneFrameCalcTime / 10000}");
                 DXcs.DrawDebug(1000f / 60);
 
                 DXcs.FrameEnd();
@@ -170,6 +168,33 @@ namespace TDAjam
                 {
                     DXcs.DrawDebug("F");
                     DXcs.SetMusicVolume("tm", 255);
+                }
+
+                DXcs.FrameEnd();
+            }
+        }
+        public static void Tt_Position()
+        {
+            int len = 100;
+            float pi23 = 3.14f / 3 * 2;
+            Position p = new Position(DXcs.ResWidth / 2, DXcs.ResHeight / 2);
+            List<Position> pl = new List<Position>();
+            for (float i = 0; i < 6.28f; i += 0.1f)
+            {
+                pl.Add(new Position((float)Math.Cos(i) * len, (float)Math.Sin(i) * len, p));
+            }
+            while(DXcs.IsWindowOpen() && !DXcs.IsKeyDown (DX.KEY_INPUT_ESCAPE ))
+            {
+                DXcs.FrameBegin();
+                DXcs.DrawDebug("Press ESC to exit.");
+                DXcs.DrawDebug(pl.Count);
+                for (int i = 0; i < pl.Count; i++)
+                {
+                    float a = (float)(i * 6.283f / 63);
+                    float at = (float)DXcs.Scale(DateTime.Now.Millisecond, 0, 1000, 0, pi23);
+                    len = DXcs.Cos((at - a), pi23, 30, 130);
+                    pl[i].MoveTo(len * (float)Math.Cos(a), len * (float)Math.Sin(a));
+                    DXcs.DrawLine(pl[i].toPointFAbs(), p.toPointF(), Color.White);  
                 }
 
                 DXcs.FrameEnd();

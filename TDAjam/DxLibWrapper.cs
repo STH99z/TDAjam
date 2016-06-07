@@ -565,7 +565,7 @@ namespace TDAjam
         public static ulong nowTime;
         public static ulong deltaTime;
         public static Size[] FrmSize;
-        public static int DefaultSizeIndex = 6;
+        public static int DefaultSizeIndex = 1;
         public static int CenterX
         {
             get { return ResWidth / 2; }
@@ -641,6 +641,10 @@ namespace TDAjam
                 DX.ClearDrawScreen();
             return result;
         }
+        public static void DrawLine(PointF p1,PointF p2,Color col)
+        {
+            DX.DrawLine((int)p1.X, (int)p1.Y, (int)p2.X, (int)p2.Y, (uint)col.ToArgb());
+        }
         public static void DrawText(int x, int y, string str, Color col)
         {
             DX.DrawString(x, y, str, (uint)col.ToArgb());
@@ -688,6 +692,7 @@ namespace TDAjam
         {
             return (int)Tan(value, period, scale, offset);
         }
+        public static float Pow2(float a) { return a * a; }
 
         #endregion
 
