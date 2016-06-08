@@ -565,7 +565,7 @@ namespace TDAjam
         public static ulong nowTime;
         public static ulong deltaTime;
         public static Size[] FrmSize;
-        public static int DefaultSizeIndex = 1;
+        public static int DefaultSizeIndex = 6;
         public static int CenterX
         {
             get { return ResWidth / 2; }
@@ -624,10 +624,10 @@ namespace TDAjam
         /// <summary>
         /// 单个绘制周期的结束
         /// </summary>
-        public static void FrameEnd()
+        public static void FrameEnd(bool clearScreen = true)
         {
             DXcs.UpdateKeyStatus2();
-            DXcs.Present();
+            DXcs.Present(clearScreen);
             DXcs.WaitFrameTime();
         }
 

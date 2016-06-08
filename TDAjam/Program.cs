@@ -175,29 +175,52 @@ namespace TDAjam
         }
         public static void Tt_Position()
         {
-            int len = 100;
-            float pi23 = 3.14f / 3 * 2;
+            int len;
+            int lenc = 100, lenv = 20;
+            int count = 7;
+            int tp = 180;
+            float pi23 = (float)Math.PI * 2 / 3;
+            float pi2 = (float)Math.PI * 2;
             Position p = new Position(DXcs.ResWidth / 2, DXcs.ResHeight / 2);
             List<Position> pl = new List<Position>();
-            for (float i = 0; i < 6.28f; i += 0.1f)
-            {
-                pl.Add(new Position((float)Math.Cos(i) * len, (float)Math.Sin(i) * len, p));
-            }
+            Random rnd = new Random();
             while(DXcs.IsWindowOpen() && !DXcs.IsKeyDown (DX.KEY_INPUT_ESCAPE ))
             {
+                if (tp < 180)
+                    tp++;
+                else
+                {
+                    tp = 0;
+                    pl.Clear();
+                    lenc = (int)(rnd.NextDouble() * 60) + 60;
+                    lenv = (int)(rnd.NextDouble() * lenc);
+                    double rs = rnd.NextDouble();
+                    count = (int)(rs * 28) + 5;
+                    for (float i = 0; i < pi2; i += pi2 / count)
+                    {
+                        pl.Add(new Position(0, 0, p));
+                    }
+                }
                 DXcs.FrameBegin();
                 DXcs.DrawDebug("Press ESC to exit.");
                 DXcs.DrawDebug(pl.Count);
+                DXcs.DrawDebug($"{(float)DXcs.deltaTime / 10000}ms");
+                DX.SetWindowText(DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255).ToString());
                 for (int i = 0; i < pl.Count; i++)
                 {
-                    float a = (float)(i * 6.283f / 63);
+                    float a = i * pi2 / pl.Count;
                     float at = (float)DXcs.Scale(DateTime.Now.Millisecond, 0, 1000, 0, pi23);
-                    len = DXcs.Cos((at - a), pi23, 30, 130);
+                    len = DXcs.Cos((at - a), pi23, lenv, lenc);
                     pl[i].MoveTo(len * (float)Math.Cos(a), len * (float)Math.Sin(a));
-                    DXcs.DrawLine(pl[i].toPointFAbs(), p.toPointF(), Color.White);  
+                    //DXcs.DrawLine(pl[i].toPointFAbs(), p.toPointFAbs(), Color.White);
+                    if (i > 0)
+                        DXcs.DrawLine(pl[i].toPointFAbs(), pl[i - 1].toPointFAbs(), Color.White);
                 }
+                DXcs.DrawLine(pl[pl.Count - 1].toPointFAbs(), pl[0].toPointFAbs(), Color.White);
+                DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 16);
+                DX.DrawFillBox(0, 0, DXcs.ResWidth, DXcs.ResHeight, 0x20000000);
 
-                DXcs.FrameEnd();
+                DXcs.FrameEnd(false);
             }
         }
 
