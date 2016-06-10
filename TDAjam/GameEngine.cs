@@ -165,4 +165,44 @@ namespace TDAjam
         }
     }
 
+    class Entity
+    {
+
+    }
+    class Particle : Entity
+    {
+
+    }
+    class Bullet : Particle
+    {
+
+    }
+    class Breakable : Particle
+    {
+
+    }
+    class Creature : Entity
+    {
+
+    }
+    class Player : Creature
+    {
+
+    }
+    class Mob : Creature
+    {
+
+    }
+    class Boss : Mob
+    {
+
+    }
+
+    class CollisionField { }
+    class RectCollisionField : CollisionField { }
+    class RoundCollisionField : CollisionField { }
+    class FanCollitionField : CollisionField { }
+    class EllipseCollitionField : CollisionField { }
+
+
 }

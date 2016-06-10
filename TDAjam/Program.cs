@@ -205,7 +205,6 @@ namespace TDAjam
                 DXcs.DrawDebug("Press ESC to exit.");
                 DXcs.DrawDebug(pl.Count);
                 DXcs.DrawDebug($"{(float)DXcs.deltaTime / 10000}ms");
-                DX.SetWindowText(DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255).ToString());
                 for (int i = 0; i < pl.Count; i++)
                 {
                     float a = i * pi2 / pl.Count;
@@ -214,11 +213,10 @@ namespace TDAjam
                     pl[i].MoveTo(len * (float)Math.Cos(a), len * (float)Math.Sin(a));
                     //DXcs.DrawLine(pl[i].toPointFAbs(), p.toPointFAbs(), Color.White);
                     if (i > 0)
-                        DXcs.DrawLine(pl[i].toPointFAbs(), pl[i - 1].toPointFAbs(), Color.White);
+                        DXcs.DrawLine(pl[i - 1].toPointFAbs(), pl[i].toPointFAbs(), Color.White);
                 }
                 DXcs.DrawLine(pl[pl.Count - 1].toPointFAbs(), pl[0].toPointFAbs(), Color.White);
-                DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 16);
-                DX.DrawFillBox(0, 0, DXcs.ResWidth, DXcs.ResHeight, 0x20000000);
+                DXcs.DrawBox(0, 0, DXcs.ResWidth, DXcs.ResHeight, Color.FromArgb(16, Color.Black), 1);
 
                 DXcs.FrameEnd(false);
             }

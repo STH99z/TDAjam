@@ -556,6 +556,7 @@ namespace TDAjam
     {
         private const bool DEBUGMODE = true;
         private const int use3Dmode = 0;
+        private const float fpsLimit = 60f;
         public static Random rnd;
         public static int FrmWidth, FrmHeight;
         public static int ResWidth, ResHeight;
@@ -643,14 +644,32 @@ namespace TDAjam
         }
         public static void DrawLine(PointF p1,PointF p2,Color col)
         {
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
             DX.DrawLine((int)p1.X, (int)p1.Y, (int)p2.X, (int)p2.Y, (uint)col.ToArgb());
+        }
+        public static void DrawLine(int x1, int y1, int x2, int y2, Color col)
+        {
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
+            DX.DrawLine(x1, y1, x2, y2, (uint)col.ToArgb());
+        }
+        public static void DrawBox(PointF p1, PointF p2, Color col, int fillflag = 0)
+        {
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
+            DX.DrawBox((int)p1.X, (int)p1.Y, (int)p2.X, (int)p2.Y, (uint)col.ToArgb(), fillflag);
+        }
+        public static void DrawBox(int x1, int y1, int x2, int y2, Color col, int fillflag = 0)
+        {
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
+            DX.DrawBox(x1, y1, x2, y2, (uint)col.ToArgb(), fillflag);
         }
         public static void DrawText(int x, int y, string str, Color col)
         {
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
             DX.DrawString(x, y, str, (uint)col.ToArgb());
         }
         public static void DrawText<T>(int x, int y, T infoToDraw, Color col)
         {
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
             DX.DrawString(x, y, infoToDraw.ToString(), (uint)col.ToArgb());
         }
         public static void DrawDebug<T>(T infoToDraw)
@@ -743,6 +762,8 @@ namespace TDAjam
 
             SetResolution(FrmSize[0]);
             DX.SetUse3DFlag(use3Dmode);//Set to 0 to disable multi-sampling.
+            DX.SetUseZBuffer3D(1);
+            DX.SetUseZBufferFlag(1);
             DX.SetAlwaysRunFlag(1);
             DX.SetFullSceneAntiAliasingMode(0, 0); //NOTICE: Only in 3D Scene
             DX.SetCreateDrawValidGraphMultiSample(0, 0);
@@ -765,7 +786,7 @@ namespace TDAjam
         {
             //Not work in Vsync-mode
             ulong deltaTime;
-            while ((deltaTime = (ulong)DateTime.Now.Ticks - nowTime) < 1000f / 60)
+            while ((deltaTime = (ulong)DateTime.Now.Ticks - nowTime) < 1000f / fpsLimit)
             {
                 DX.WaitTimer(1);
             }
