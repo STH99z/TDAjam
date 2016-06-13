@@ -1,4 +1,4 @@
-Ôªøusing System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
@@ -11,7 +11,7 @@ namespace TDAjam
         public static bool bStop = false;
 
         /// <summary>
-        /// Â∫îÁî®Á®ãÂ∫èÁöÑ‰∏ªÂÖ•Âè£ÁÇπ„ÄÇ
+        /// ”¶”√≥Ã–Úµƒ÷˜»Îø⁄µ„°£
         /// </summary>
         [STAThread]
         static void Main()
@@ -20,11 +20,12 @@ namespace TDAjam
             DXcs.InitForm("TouhouDungeonAdventure_Jam", true);
 
             //TestingUnit.TestSprite();
+            TestingUnit.TestSpriteZ();
             //TestingUnit.TestSingleAnimation();
             //TestingUnit.TestingInput();
             //TestingUnit.TestingClocking();
             //TestingUnit.TestingAudio();
-            TestingUnit.Tt_Position();
+            //TestingUnit.Tt_Position();
 
             DXcs.DisposeAll();
             DX.DxLib_End();
@@ -72,6 +73,33 @@ namespace TDAjam
             }
             DX.WaitKey();
             dxi.UnloadImage();
+        }
+        public static void TestSpriteZ()
+        {
+            GC.Collect();
+            DxImage img1 = new DxImage(@"RES\tama_01.png");
+            DxImage img2 = new DxImage(@"Res\tama_03.png");
+            DxSprite sp1 = new DxSprite(img1);
+            DxSprite sp2 = new DxSprite(img2);
+            //DX.SetBackgroundColor(0, 128, 0);
+            while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
+            {
+                DXcs.FrameBegin();
+
+                DXcs.DrawDebug("AntiAliasing Test");
+                DX.SetZBias(1000);
+                sp1.SetScale(10, 10);
+                sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
+                DX.SetZBias(0);
+                sp1.SetScale(1, 1);
+                sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
+                DX.SetZBias(DXcs.Sin(DateTime.Now.Millisecond, 1000, 2, 0));
+                sp2.DrawSprite(DXcs.CenterX + 15, DXcs.CenterY);
+                DX.SetZBias(-DXcs.Sin(DateTime.Now.Millisecond, 1000, 2, 0));
+                sp2.DrawSprite(DXcs.CenterX - 15, DXcs.CenterY);
+
+                DXcs.FrameEnd();
+            }
         }
         public static void TestSingleAnimation()
         {
@@ -184,7 +212,7 @@ namespace TDAjam
             Position p = new Position(DXcs.ResWidth / 2, DXcs.ResHeight / 2);
             List<Position> pl = new List<Position>();
             Random rnd = new Random();
-            while(DXcs.IsWindowOpen() && !DXcs.IsKeyDown (DX.KEY_INPUT_ESCAPE ))
+            while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
                 if (tp < 180)
                     tp++;

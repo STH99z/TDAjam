@@ -198,13 +198,12 @@ namespace TDAjam
         public DxSprite(DxImage img, int slicex = 1, int slicey = 1, float scalex = 1f, float scaley = 1f, float angle = 0f, bool centered = true)
         {
             image = img;
-            if (centered) SetCenter2CellCenter();
-            else SetCenter(0, 0);
             SetSlice(slicex, slicey);
             SetScale(scalex, scaley);
             SetAngle(angle);
             CalcCellSize();
-
+            if (centered) SetCenter2CellCenter();
+            else SetCenter(0, 0);
         }
         private void CalcCellSize()
         {
@@ -281,6 +280,7 @@ namespace TDAjam
                 scaleX, scaleY,
                 angle, 0);
         }
+
     }
     /// <summary>
     /// Arrangement of arguments in DxSprite.
@@ -555,14 +555,11 @@ namespace TDAjam
     static class DXcs
     {
         private const bool DEBUGMODE = true;
-        private const int use3Dmode = 0;
+        private const int use3Dmode = 1;
         private const float fpsLimit = 60f;
         public static Random rnd;
         public static int FrmWidth, FrmHeight;
         public static int ResWidth, ResHeight;
-        /// <summary>
-        /// each frame start time. returns ticks.
-        /// </summary>
         public static ulong nowTime;
         public static ulong deltaTime;
         public static Size[] FrmSize;
@@ -621,6 +618,7 @@ namespace TDAjam
         {
             System.Windows.Forms.Application.DoEvents();
             DXcs.UpdateKeyStatus();
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255);
         }
         /// <summary>
         /// 单个绘制周期的结束
@@ -634,12 +632,17 @@ namespace TDAjam
 
         public static int Present(bool clearScreen = true)
         {
+            //国外论坛上找到的
+            DX.RefreshDxLibDirect3DSetting();
             //Present和周期时间计算
             debugDrawIndex = 0;
             oneFrameCalcTime = (ulong)DateTime.Now.Ticks - oneFrameCalcTimeBuf;
             int result = DX.ScreenFlip();
             if (clearScreen)
+            {
                 DX.ClearDrawScreen();
+                DX.ClearDrawScreenZBuffer();
+            }
             return result;
         }
         public static void DrawLine(PointF p1,PointF p2,Color col)
@@ -742,6 +745,8 @@ namespace TDAjam
         }
         public static int InitForm(string title, bool bWindowed)
         {
+            System.IO.StreamWriter log = new System.IO.StreamWriter("Logme.txt");
+            log.WriteLine($"{DateTime.Now.ToString()}");
             DX.SetOutApplicationLogValidFlag(0);
             if (bWindowed)
             {
@@ -759,26 +764,32 @@ namespace TDAjam
                 SetWindowSize(System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width, System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height);
             }
             DX.SetWindowIconHandle(TDAjam.Properties.Resources.ml.Handle);
-
-            SetResolution(FrmSize[0]);
-            DX.SetUse3DFlag(use3Dmode);//Set to 0 to disable multi-sampling.
-            DX.SetUseZBuffer3D(1);
-            DX.SetUseZBufferFlag(1);
-            DX.SetAlwaysRunFlag(1);
-            DX.SetFullSceneAntiAliasingMode(0, 0); //NOTICE: Only in 3D Scene
-            DX.SetCreateDrawValidGraphMultiSample(0, 0);
-
             DX.SetWindowText(title);
             DX.ChangeFont("Microsoft YaHei");
             DX.SetFontSize(20);
+            DX.SetAlwaysRunFlag(1);
             FontWidth = 20 / 2;
             FontHeight = (int)(20 * 1.2);
+
+            SetResolution(FrmSize[0]);
+            log.WriteLine($"{DX.SetFullSceneAntiAliasingMode(0, 0)}");
+            log.WriteLine($"{DX.SetCreateDrawValidGraphMultiSample(0, 0)}");
+            log.WriteLine($"{DX.SetUse3DFlag(use3Dmode)}");
+
             if (DX.DxLib_Init() == -1)
             {
                 System.Windows.Forms.MessageBox.Show("failed");
                 return 0;
             }
             DX.SetDrawScreen(DX.DX_SCREEN_BACK);
+            log.WriteLine($"{ DX.SetZBufferSize(ResWidth, ResHeight)}");
+            log.WriteLine($"{ DX.SetZBufferBitDepth(32)}");
+            log.WriteLine($"{ DX.SetUseZBuffer3D(1)}");
+            log.WriteLine($"{ DX.SetUseZBufferFlag(1)}");
+            log.WriteLine($"{ DX.SetWriteZBuffer3D(1)}");
+            log.WriteLine($"{ DX.SetWriteZBufferFlag(1)}");
+
+            log.Close();
             nowTime = (ulong)DateTime.Now.Ticks;
             return 1;
         }
@@ -809,21 +820,25 @@ namespace TDAjam
             }
             else
             {
+                int count = graphHandleSet.Count;
                 string handleNames = "";
                 foreach (var item in graphHandleSet)
                 {
                     DX.DeleteGraph(item);
-                    handleNames += item + '\n';
+                    handleNames += item.ToString() + "\n";
                 }
                 graphHandleSet.Clear();
-                System.Windows.Forms.MessageBox.Show("Handles deleted:\n" + handleNames);
+                System.Windows.Forms.MessageBox.Show($"Handles deleted:{count}\n" + handleNames);
                 return;
             }
 
         }
         public static void AddGraphHandle(int handle)
         {
-            if (!graphHandleSet.Contains(handle)) graphHandleSet.Add(handle);
+            if (!graphHandleSet.Contains(handle))
+            {
+                graphHandleSet.Add(handle);
+            }
         }
         public static void DisposeAll()
         {

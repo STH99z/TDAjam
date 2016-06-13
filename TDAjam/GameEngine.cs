@@ -204,5 +204,4 @@ namespace TDAjam
     class FanCollitionField : CollisionField { }
     class EllipseCollitionField : CollisionField { }
 
-
 }
