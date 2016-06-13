@@ -7,6 +7,89 @@ using System.Drawing;
 
 namespace TDAjam
 {
+    [Serializable]
+    class DGparams
+    {
+        /// <summary>
+        /// 0=DrawGraph,1=DrawRotaGraph3,2=DrawRectRotaGraph3
+        /// </summary>
+        public byte method = 0;
+        /// <summary>
+        /// Image handle
+        /// </summary>
+        public int handle = 0;
+        /// <summary>
+        /// Z-place
+        /// </summary>
+        public int Z = 0;
+        /// <summary>
+        /// destnation
+        /// </summary>
+        public int destX = 0, destY = 0;
+        /// <summary>
+        /// source
+        /// </summary>
+        public int srcX = 0, srcY = 0, srcW = 0, srcH = 0;
+        /// <summary>
+        /// center
+        /// </summary>
+        public int centX = 0, centY = 0;
+        /// <summary>
+        /// scale
+        /// </summary>
+        public double scaleX = 1, scaleY = 1;
+        /// <summary>
+        /// angle
+        /// </summary>
+        public double angle = 0;
+        public DGparams(int handle, int z, 
+            int x, int y)
+        {
+            method = 0;
+            this.handle = handle;
+            Z = z;
+            destX = x;
+            destY = y;
+        }
+        public DGparams(
+            int handle ,int z, int x, int y, 
+            int centerX, int centerY, double scaleX, double scaleY, double angle)
+        {
+            method = 1;
+            this.handle = handle;
+            Z = z;
+            destX = x;
+            destY = y;
+            centX = centerX;
+            centY = centerY;
+            this.scaleX = scaleX;
+            this.scaleY = scaleY;
+            this.angle = angle;
+        }
+        public DGparams(
+            int handle,int z, 
+            int x, int y, 
+            int srcX, int srcY, int srcW, int srcH, 
+            int centerX, int centerY, 
+            double scaleX, double scaleY, double angle)
+        {
+            method = 2;
+            this.handle = handle;
+            Z = z;
+            destX = x;
+            destY = y;
+            centX = centerX;
+            centY = centerY;
+            this.srcX = srcX;
+            this.srcY = srcY;
+            this.srcW = srcW;
+            this.srcH = srcH;
+            this.scaleX = scaleX;
+            this.scaleY = scaleY;
+            this.angle = angle;
+        }
+    }
+
     /// <summary>
     /// Single wrapper for image handle.
     /// </summary>
@@ -90,16 +173,24 @@ namespace TDAjam
         }
         public void DrawImage(int x, int y, int transFlag = 1)
         {
-            DX.DrawGraph(x, y, handle, transFlag);
-
+            if (!DxLayer.LayerOpened)
+                DX.DrawGraph(x, y, handle, transFlag);
+            else
+                DxLayer.list.Add(new DGparams(handle, DxLayer.Zplace, x, y));
         }
         public void DrawImageAdv(int x, int y, int centerX, int centerY, double scaleX, double scaleY, double angle)
         {
-            DX.DrawRotaGraph3(x, y, centerX, centerY, scaleX, scaleY, angle, handle, 1);
+            if (!DxLayer.LayerOpened)
+                DX.DrawRotaGraph3(x, y, centerX, centerY, scaleX, scaleY, angle, handle, 1);
+            else
+                DxLayer.list.Add(new DGparams(handle, DxLayer.Zplace, x, y, centerX, centerY, scaleX, scaleY, angle));
         }
-        public void DrawImageClipAdv(int x, int y, int srcX, int srcY, int srcW, int srcH, int centerX, int centerY, double scaleX, double scaleY, double angle, int flip)
+        public void DrawImageClipAdv(int x, int y, int srcX, int srcY, int srcW, int srcH, int centerX, int centerY, double scaleX, double scaleY, double angle)
         {
-            DX.DrawRectRotaGraph3(x, y, srcX, srcY, srcW, srcH, centerX, centerY, scaleX, scaleY, angle, handle, 1, 0);
+            if (!DxLayer.LayerOpened)
+                DX.DrawRectRotaGraph3(x, y, srcX, srcY, srcW, srcH, centerX, centerY, scaleX, scaleY, angle, handle, 1, 0);
+            else
+                DxLayer.list.Add(new DGparams(handle, DxLayer.Zplace, x, y, srcX, srcY, srcW, srcH, centerX, centerY, scaleX, scaleY, angle));
         }
 
     }
@@ -108,6 +199,7 @@ namespace TDAjam
     /// Only contains changable drawing arguments.
     /// Use SingleAnimation or Animation class for procedural changle usage.
     /// </summary>
+    [Serializable]
     class DxSprite
     {
         DxImage image;
@@ -278,13 +370,14 @@ namespace TDAjam
                 (int)cellW, (int)cellH,
                 centerX, centerY,
                 scaleX, scaleY,
-                angle, 0);
+                angle);
         }
 
     }
     /// <summary>
     /// Arrangement of arguments in DxSprite.
     /// </summary>
+    [Serializable]
     class DxSingleAnimation
     {
         /// <summary>
@@ -555,7 +648,7 @@ namespace TDAjam
     static class DXcs
     {
         private const bool DEBUGMODE = true;
-        private const int use3Dmode = 1;
+        private const int use3Dmode = 0;
         private const float fpsLimit = 60f;
         public static Random rnd;
         public static int FrmWidth, FrmHeight;
@@ -782,12 +875,12 @@ namespace TDAjam
                 return 0;
             }
             DX.SetDrawScreen(DX.DX_SCREEN_BACK);
-            log.WriteLine($"{ DX.SetZBufferSize(ResWidth, ResHeight)}");
-            log.WriteLine($"{ DX.SetZBufferBitDepth(32)}");
-            log.WriteLine($"{ DX.SetUseZBuffer3D(1)}");
-            log.WriteLine($"{ DX.SetUseZBufferFlag(1)}");
-            log.WriteLine($"{ DX.SetWriteZBuffer3D(1)}");
-            log.WriteLine($"{ DX.SetWriteZBufferFlag(1)}");
+            //log.WriteLine($"{ DX.SetZBufferSize(ResWidth, ResHeight)}");
+            //log.WriteLine($"{ DX.SetZBufferBitDepth(32)}");
+            //log.WriteLine($"{ DX.SetUseZBuffer3D(1)}");
+            //log.WriteLine($"{ DX.SetUseZBufferFlag(1)}");
+            //log.WriteLine($"{ DX.SetWriteZBuffer3D(1)}");
+            //log.WriteLine($"{ DX.SetWriteZBufferFlag(1)}");
 
             log.Close();
             nowTime = (ulong)DateTime.Now.Ticks;
@@ -1023,5 +1116,93 @@ namespace TDAjam
         }
 
         #endregion
+    }
+    /// <summary>
+    /// Simple sprite draw order control class
+    /// </summary>
+    static class DxLayer
+    {
+        static DxLayer ()
+        {
+            list = new List<DGparams>();
+        }
+        /// <summary>
+        /// Get the state of layer. Affect image draw order when open.
+        /// </summary>
+        public static bool LayerOpened { get; private set; }
+        internal static List<DGparams> list;
+        internal class DGcomparer : IComparer<DGparams>
+        {
+            public int Compare(DGparams x, DGparams y)
+            {
+                compareTimes++;
+                return x.Z - y.Z;
+                //throw new NotImplementedException();
+            }
+        }
+        private static DGcomparer DGC = new DGcomparer();
+        public static int Zplace { get; set; } = 0;
+        public static int compareTimes=0;
+        public static void SetZ(int Z)
+        {
+            Zplace = Z;
+        }
+        /// <summary>
+        /// Open the layer to draw.
+        /// </summary>
+        /// <returns></returns>
+        public static bool Open()
+        {
+            if (LayerOpened)
+                return false;
+            LayerOpened = true;
+            //Something to do
+            return true;
+        }
+        /// <summary>
+        /// Close the layer and draw layer.
+        /// </summary>
+        /// <returns></returns>
+        public static bool Close()
+        {
+            if (!LayerOpened)
+                return false;
+            SortLayer();
+            DrawLayer();
+            LayerOpened = false;
+            return true;
+        }
+        private static void SortLayer()
+        {
+            compareTimes = 0;
+            list.Sort(DGC);
+        }
+        private static void DrawLayer()
+        {
+            DGparams DGtemp;
+            for (int i = 0; i < list.Count; i++)
+            {
+                DGtemp = list[i];
+                switch(list[i].method )
+                {
+                    case 0:
+                        DX.DrawGraph(DGtemp.destX, DGtemp.destY, DGtemp.handle, 1);
+                        break;
+                    case 1:
+                        DX.DrawRotaGraph3(DGtemp.destX, DGtemp.destY, DGtemp.centX, DGtemp.centY,
+                            DGtemp.scaleX, DGtemp.scaleY, DGtemp.angle, DGtemp.handle, 1);
+                        break;
+                    case 2:
+                        DX.DrawRectRotaGraph3(
+                            DGtemp.destX, DGtemp.destY,
+                            DGtemp.srcX, DGtemp.srcY, DGtemp.srcW, DGtemp.srcH,
+                            DGtemp.centX, DGtemp.centY,
+                            DGtemp.scaleX, DGtemp.scaleY,
+                            DGtemp.angle, DGtemp.handle, 1, 0);
+                        break;
+                }
+            }
+            list.Clear();
+        }
     }
 }

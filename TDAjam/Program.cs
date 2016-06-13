@@ -86,19 +86,32 @@ namespace TDAjam
             {
                 DXcs.FrameBegin();
 
-                DXcs.DrawDebug("AntiAliasing Test");
-                DX.SetZBias(1000);
-                sp1.SetScale(10, 10);
-                sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
-                DX.SetZBias(0);
-                sp1.SetScale(1, 1);
-                sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
-                DX.SetZBias(DXcs.Sin(DateTime.Now.Millisecond, 1000, 2, 0));
-                sp2.DrawSprite(DXcs.CenterX + 15, DXcs.CenterY);
-                DX.SetZBias(-DXcs.Sin(DateTime.Now.Millisecond, 1000, 2, 0));
-                sp2.DrawSprite(DXcs.CenterX - 15, DXcs.CenterY);
+                if(!DXcs.IsKeyDown (DX.KEY_INPUT_SPACE ))
+                {
+                    DxLayer.Open();
+                    DxLayer.SetZ(-1000);
+                    sp1.SetScale(15, 15);
+                    sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
+                    for (int i = 0; i < 1000; i++)
+                    {
+                        double a, r;
+                        int x, y;
+                        a = DXcs.rnd.NextDouble() * Math.PI * 2;
+                        r = DXcs.rnd.NextDouble() * 50 + 110;
+                        y = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
+                        x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX );
+                        DxLayer.SetZ(y);
+                        sp2.DrawSprite(x, y);
+                    }
+                    DxLayer.Close();
+                    DXcs.DrawDebug("AntiAliasing Test");
+                    DXcs.DrawDebug("Z test");
+                    DXcs.DrawDebug(DxLayer.compareTimes);
+                    DXcs.DrawDebug((float)DXcs.deltaTime / 10000);
+                }
 
                 DXcs.FrameEnd();
+                
             }
         }
         public static void TestSingleAnimation()
