@@ -165,43 +165,56 @@ namespace TDAjam
         }
     }
 
+    [Serializable]
     class Entity
     {
 
     }
+    [Serializable]
     class Particle : Entity
     {
 
     }
+    [Serializable]
     class Bullet : Particle
     {
 
     }
+    [Serializable]
     class Breakable : Particle
     {
 
     }
+    [Serializable]
     class Creature : Entity
     {
 
     }
+    [Serializable]
     class Player : Creature
     {
 
     }
+    [Serializable]
     class Mob : Creature
     {
 
     }
+    [Serializable]
     class Boss : Mob
     {
 
     }
 
+    [Serializable]
     class CollisionField { }
+    [Serializable]
     class RectCollisionField : CollisionField { }
+    [Serializable]
     class RoundCollisionField : CollisionField { }
+    [Serializable]
     class FanCollitionField : CollisionField { }
+    [Serializable]
     class EllipseCollitionField : CollisionField { }
 
 }
