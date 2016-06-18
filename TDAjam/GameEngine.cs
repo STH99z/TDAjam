@@ -168,7 +168,8 @@ namespace TDAjam
     [Serializable]
     class Entity
     {
-
+        public Position position { get; set; }
+        public Point center { get; set; } = new Point(0, 0);
     }
     [Serializable]
     class Particle : Entity

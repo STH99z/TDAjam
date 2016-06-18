@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using DxLibDLL;
 using System.Drawing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TDAjam
 {

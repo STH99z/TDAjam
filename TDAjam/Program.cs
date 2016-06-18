@@ -84,7 +84,8 @@ namespace TDAjam
             DxImage img2 = new DxImage(@"Res\tama_03.png");
             DxSprite sp1 = new DxSprite(img1);
             DxSprite sp2 = new DxSprite(img2);
-            int count = 30, speed = 4;
+            int count = 30, speed = 3000;
+            long start = DateTime.Now.Ticks;
             //DX.SetBackgroundColor(0, 128, 0);
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
@@ -99,12 +100,19 @@ namespace TDAjam
                     for (int i = 0; i < count; i++)
                     {
                         double a, r;
-                        float x, y;
-                        a = DXcs.Scale(DateTime.Now.Millisecond, 0, 1000, 0, Math.PI * 2 / count * speed) + Math.PI * 2 / count * i;
-                        r = 100;
-                        y = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
-                        x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX );
-                        DxLayer.SetZ(y);
+                        float x, y, z;
+                        r = 60;
+                        a = DXcs.Scale((DateTime.Now.Ticks - start) / 10000 % speed, 0, speed, 0, Math.PI * 2) + Math.PI * 2 / count * i;
+                        z = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
+                        x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
+                        y = DXcs.CenterY - (count / 2 - i) * 8;
+                        DxLayer.SetZ(z);
+                        sp2.DrawSprite((int)x, (int)y);
+                        a += Math.PI - 1;
+                        z = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
+                        x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
+                        y = DXcs.CenterY - (count / 2 - i) * 8;
+                        DxLayer.SetZ(z);
                         sp2.DrawSprite((int)x, (int)y);
                     }
                     DxLayer.Close();
