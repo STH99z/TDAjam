@@ -19,6 +19,7 @@ namespace TDAjam
             DXcs.InitGameSettings();
             DXcs.InitForm("TouhouDungeonAdventure_Jam", true);
 
+#if DEBUG
             //TestingUnit.TestSprite();
             TestingUnit.TestSpriteZ();
             //TestingUnit.TestSingleAnimation();
@@ -26,11 +27,13 @@ namespace TDAjam
             //TestingUnit.TestingClocking();
             //TestingUnit.TestingAudio();
             //TestingUnit.Tt_Position();
+#endif
 
             DXcs.DisposeAll();
             DX.DxLib_End();
         }
     }
+#if DEBUG
     static class TestingUnit
     {
         public static void TestSprite()
@@ -81,6 +84,7 @@ namespace TDAjam
             DxImage img2 = new DxImage(@"Res\tama_03.png");
             DxSprite sp1 = new DxSprite(img1);
             DxSprite sp2 = new DxSprite(img2);
+            int count = 30, speed = 4;
             //DX.SetBackgroundColor(0, 128, 0);
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
@@ -92,26 +96,26 @@ namespace TDAjam
                     DxLayer.SetZ(-1000);
                     sp1.SetScale(15, 15);
                     sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
-                    for (int i = 0; i < 1000; i++)
+                    for (int i = 0; i < count; i++)
                     {
                         double a, r;
-                        int x, y;
-                        a = DXcs.rnd.NextDouble() * Math.PI * 2;
-                        r = DXcs.rnd.NextDouble() * 50 + 110;
+                        float x, y;
+                        a = DXcs.Scale(DateTime.Now.Millisecond, 0, 1000, 0, Math.PI * 2 / count * speed) + Math.PI * 2 / count * i;
+                        r = 100;
                         y = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
                         x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX );
                         DxLayer.SetZ(y);
-                        sp2.DrawSprite(x, y);
+                        sp2.DrawSprite((int)x, (int)y);
                     }
                     DxLayer.Close();
                     DXcs.DrawDebug("AntiAliasing Test");
                     DXcs.DrawDebug("Z test");
-                    DXcs.DrawDebug(DxLayer.compareTimes);
-                    DXcs.DrawDebug((float)DXcs.deltaTime / 10000);
+                    DXcs.DrawDebug("c=" + DxLayer.compareTimes + " times");
+                    DXcs.DrawDebug("s=" + DxLayer.sortingTime + "ms");
+                    DXcs.DrawDebug("d=" + DxLayer.drawingTime + "ms");
+                    DXcs.DrawDebug("f=" + DXcs.deltaTime / 10000f + "ms");
                 }
-
                 DXcs.FrameEnd();
-                
             }
         }
         public static void TestSingleAnimation()
@@ -264,4 +268,5 @@ namespace TDAjam
         }
 
     }
+#endif
 }

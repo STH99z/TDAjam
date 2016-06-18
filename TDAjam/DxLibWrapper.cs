@@ -21,7 +21,7 @@ namespace TDAjam
         /// <summary>
         /// Z-place
         /// </summary>
-        public int Z = 0;
+        public float Z = 0f;
         /// <summary>
         /// destnation
         /// </summary>
@@ -42,7 +42,7 @@ namespace TDAjam
         /// angle
         /// </summary>
         public double angle = 0;
-        public DGparams(int handle, int z, 
+        public DGparams(int handle, float z,
             int x, int y)
         {
             method = 0;
@@ -52,7 +52,7 @@ namespace TDAjam
             destY = y;
         }
         public DGparams(
-            int handle ,int z, int x, int y, 
+            int handle, float z, int x, int y,
             int centerX, int centerY, double scaleX, double scaleY, double angle)
         {
             method = 1;
@@ -67,10 +67,10 @@ namespace TDAjam
             this.angle = angle;
         }
         public DGparams(
-            int handle,int z, 
-            int x, int y, 
-            int srcX, int srcY, int srcW, int srcH, 
-            int centerX, int centerY, 
+            int handle, float z,
+            int x, int y,
+            int srcX, int srcY, int srcW, int srcH,
+            int centerX, int centerY,
             double scaleX, double scaleY, double angle)
         {
             method = 2;
@@ -902,29 +902,25 @@ namespace TDAjam
         public static void ClearGraphMemory()
         {
             if (graphHandleSet.Count == 0) return;
-            if (!DEBUGMODE)
+#if DEBUG
+            int count = graphHandleSet.Count;
+            string handleNames = "";
+            foreach (var item in graphHandleSet)
             {
-                foreach (var item in graphHandleSet)
-                {
-                    DX.DeleteGraph(item);
-                }
-                graphHandleSet.Clear();
-                return;
+                DX.DeleteGraph(item);
+                handleNames += item.ToString() + "\n";
             }
-            else
+            graphHandleSet.Clear();
+            System.Windows.Forms.MessageBox.Show($"Handles deleted:{count}\n" + handleNames);
+            return;
+#else
+            foreach (var item in graphHandleSet)
             {
-                int count = graphHandleSet.Count;
-                string handleNames = "";
-                foreach (var item in graphHandleSet)
-                {
-                    DX.DeleteGraph(item);
-                    handleNames += item.ToString() + "\n";
-                }
-                graphHandleSet.Clear();
-                System.Windows.Forms.MessageBox.Show($"Handles deleted:{count}\n" + handleNames);
-                return;
+                DX.DeleteGraph(item);
             }
-
+            graphHandleSet.Clear();
+            return;
+#endif
         }
         public static void AddGraphHandle(int handle)
         {
@@ -949,9 +945,9 @@ namespace TDAjam
 
 
 
-        #endregion
+#endregion
 
-        #region InputRelated
+#region InputRelated
         /// <summary>
         /// 按键状态，外部访问通过函数，每帧通过UpdateKeyStatus更新
         /// </summary>
@@ -1004,9 +1000,9 @@ namespace TDAjam
             }
         }
 
-        #endregion
+#endregion
 
-        #region AudioRelated
+#region AudioRelated
         private static Dictionary<string, int> musicHandleDic;
         /// <summary>
         /// 载入MP3文件到内存
@@ -1115,7 +1111,7 @@ namespace TDAjam
             musicHandleDic.Clear();
         }
 
-        #endregion
+#endregion
     }
     /// <summary>
     /// Simple sprite draw order control class
@@ -1135,15 +1131,21 @@ namespace TDAjam
         {
             public int Compare(DGparams x, DGparams y)
             {
+#if DEBUG
                 compareTimes++;
-                return x.Z - y.Z;
+#endif
+                return (int)Math.Round(x.Z - y.Z);
                 //throw new NotImplementedException();
             }
         }
         private static DGcomparer DGC = new DGcomparer();
-        public static int Zplace { get; set; } = 0;
+        public static float Zplace { get; set; } = 0;
+#if DEBUG
         public static int compareTimes=0;
-        public static void SetZ(int Z)
+        public static float sortingTime = 0f;
+        public static float drawingTime = 0f;
+#endif
+        public static void SetZ(float Z)
         {
             Zplace = Z;
         }
@@ -1156,7 +1158,6 @@ namespace TDAjam
             if (LayerOpened)
                 return false;
             LayerOpened = true;
-            //Something to do
             return true;
         }
         /// <summary>
@@ -1165,16 +1166,31 @@ namespace TDAjam
         /// <returns></returns>
         public static bool Close()
         {
+#if DEBUG
+            if (!LayerOpened)
+                return false;
+            long tn = DateTime.Now.Ticks;
+            SortLayer();
+            sortingTime = (DateTime.Now.Ticks - tn) / 10000f;
+            tn = DateTime.Now.Ticks;
+            DrawLayer();
+            drawingTime = (DateTime.Now.Ticks - tn) / 10000f;
+            LayerOpened = false;
+            return true;
+#else
             if (!LayerOpened)
                 return false;
             SortLayer();
             DrawLayer();
             LayerOpened = false;
             return true;
+#endif
         }
         private static void SortLayer()
         {
+#if DEBUG
             compareTimes = 0;
+#endif
             list.Sort(DGC);
         }
         private static void DrawLayer()
