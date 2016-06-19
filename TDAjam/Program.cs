@@ -80,54 +80,57 @@ namespace TDAjam
         public static void TestSpriteZ()
         {
             GC.Collect();
-            DxImage img1 = new DxImage(@"RES\chara_07.png");
-            DxImage img2 = new DxImage(@"Res\tama_03.png");
-            DxSprite sp1 = new DxSprite(img1, 3, 5);
-            DxSprite sp2 = new DxSprite(img2);
+            DxImage[] charalist = new DxImage[36];
+            for (int i = 0; i < 36; i++)
+            {
+                charalist[i] = new DxImage(@"RES\chara\chara_" + string.Format("{0:D2}", i + 1) + ".png");
+            }
+            DxSprite sp1 = new DxSprite(charalist[0], 3, 5);
             int[] face = { 7, 10, 13, 10, 7, 4, 1, 4 };
-            int count = 15, speed = 5000;
+            int count = 1, speed = 10000;
             double rollang = Math.PI;
             long start = DateTime.Now.Ticks;
             //DX.SetBackgroundColor(0, 128, 0);
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
                 DXcs.FrameBegin();
-                if(!DXcs.IsKeyDown (DX.KEY_INPUT_SPACE ))
+                if (!DXcs.IsKeyDown(DX.KEY_INPUT_SPACE))
                 {
                     DxLayer.Open();
                     for (int i = 0; i < count; i++)
                     {
                         double a, r;
                         float x, y, z;
-                        for (int j = 0; j < 3; j++)
+                        for (int j = 0; j < 8; j++)
                         {
-                            r = 60;
-                            a = DXcs.Scale((DateTime.Now.Ticks - start) / 10000 % speed, 0, speed, 0, Math.PI * 2) +
-                                rollang / count * i + j * 2.09f;
+                            r = 100;
+                            a = DXcs.Scale((DXcs.nowTime - start) / 10000 % speed, 0, speed, 0, Math.PI * 2) +
+                                rollang / count * i + j * 6.28f / 8;
                             if (a > Math.PI * 2)
                                 a -= Math.PI * 2;
                             z = DXcs.Sin(a, Math.PI * 2, r, 0);
                             x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
-                            y = DXcs.CenterY - (count / 2 - i) * 200/count + z / 2;
+                            y = DXcs.CenterY - (count / 2 - i) * 200 / count + z / 2;
                             DxLayer.SetZ(z);
                             sp1.SetIndex(face[(int)((a + Math.PI / 8) / (Math.PI / 4)) % 8]);
+                            sp1.image = charalist[j];
                             if (a >= Math.PI / 2 && a < Math.PI * 1.5f)
                                 sp1.SetScale(-1f, 1f);
                             else
                                 sp1.SetScale(1f, 1f);
                             sp1.DrawCellSprite((int)x, (int)y);
-                            DXcs.DrawText<int>((int)(x - sp1.cellW / 4), (int)(y - sp1.cellH), j, Color.White);
                         }
                     }
-                    DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 128);
                     DxLayer.Close();
-                    DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255);
-                    DXcs.DrawDebug("AntiAliasing Test");
-                    DXcs.DrawDebug("Z test");
-                    DXcs.DrawDebug("c=" + DxLayer.compareTimes + " times");
-                    DXcs.DrawDebug("s=" + DxLayer.sortingTime + "ms");
-                    DXcs.DrawDebug("d=" + DxLayer.drawingTime + "ms");
-                    DXcs.DrawDebug("f=" + DXcs.deltaTime / 10000f + "ms");
+                    if(false)
+                    {
+                        DXcs.DrawDebug("AntiAliasing Test");
+                        DXcs.DrawDebug("Z test");
+                        DXcs.DrawDebug("c=" + DxLayer.compareTimes + " times");
+                        DXcs.DrawDebug("s=" + DxLayer.sortingTime + "ms");
+                        DXcs.DrawDebug("d=" + DxLayer.drawingTime + "ms");
+                        DXcs.DrawDebug("f=" + DXcs.deltaTime / 10000f + "ms");
+                    }
                 }
                 DXcs.FrameEnd();
             }
@@ -149,8 +152,8 @@ namespace TDAjam
                 s.DrawSprite(20, 163);
                 DXcs.DrawDebug("TestingUnit.TestSingleAnimation()");
                 DXcs.DrawDebug(typeof(DxSingleAnimation));
-                DXcs.DrawDebug("Ticks:" + ((ulong)DateTime.Now.Ticks - dsa.startTime));
-                DXcs.DrawDebug("index:" + ((ulong)DateTime.Now.Ticks - dsa.startTime) / (dsa.frameTime * 10000));
+                DXcs.DrawDebug("Ticks:" + (DXcs.nowTime - dsa.startTime));
+                DXcs.DrawDebug("index:" + (DXcs.nowTime - dsa.startTime) / (dsa.frameTime * 10000));
                 DXcs.DrawDebug("indexMap:{ 9, 10, 11, 10 }");
                 DXcs.DrawDebug("Frame:" + iFrame);
                 DX.DrawBox(

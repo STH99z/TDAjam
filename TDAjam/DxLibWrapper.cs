@@ -203,7 +203,7 @@ namespace TDAjam
     [Serializable]
     class DxSprite
     {
-        DxImage image;
+        public DxImage image;
         /// <summary>
         /// Shows the slice count of the image.Init when constructed.
         /// </summary>
@@ -534,7 +534,7 @@ namespace TDAjam
         public ushort index { get; set; }
         public uint frameTime { get; set; }
         public uint animationTime { get; set; }
-        public ulong startTime { get; private set; }
+        public long startTime { get; private set; }
         public bool usePositionControl { get; set; }
         public PointF position { get; set; }
         public PointF positionStart { get; set; }
@@ -568,7 +568,7 @@ namespace TDAjam
         }
         public void SetStartTime()
         {
-            this.startTime = (ulong)DateTime.Now.Ticks;
+            this.startTime = DateTime.Now.Ticks;
         }
         public void SetIndexMap(ushort[] map)
         {
@@ -584,7 +584,7 @@ namespace TDAjam
         }
         public void ApplyTransform()
         {
-            ulong timeNow = DXcs.nowTime;
+            long timeNow = DXcs.nowTime;
             for (int i = 0; i < 5; i++)
             {
                 if (useTransform[i])
@@ -654,8 +654,8 @@ namespace TDAjam
         public static Random rnd;
         public static int FrmWidth, FrmHeight;
         public static int ResWidth, ResHeight;
-        public static ulong nowTime;
-        public static ulong deltaTime;
+        public static long nowTime;
+        public static long deltaTime;
         public static Size[] FrmSize;
         public static int DefaultSizeIndex = 6;
         public static int CenterX
@@ -673,8 +673,8 @@ namespace TDAjam
         public static int FontHeight { get; private set; }
         public static int FontWidth { get; private set; }
         private static int debugDrawIndex = 0;
-        public static ulong oneFrameCalcTime { get; private set; }
-        private static ulong oneFrameCalcTimeBuf;
+        public static long oneFrameCalcTime { get; private set; }
+        private static long oneFrameCalcTimeBuf;
 
         private static HashSet<int> graphHandleSet;
 
@@ -730,7 +730,7 @@ namespace TDAjam
             DX.RefreshDxLibDirect3DSetting();
             //Present和周期时间计算
             debugDrawIndex = 0;
-            oneFrameCalcTime = (ulong)DateTime.Now.Ticks - oneFrameCalcTimeBuf;
+            oneFrameCalcTime = DateTime.Now.Ticks - oneFrameCalcTimeBuf;
             int result = DX.ScreenFlip();
             if (clearScreen)
             {
@@ -884,32 +884,38 @@ namespace TDAjam
             //log.WriteLine($"{ DX.SetWriteZBufferFlag(1)}");
 
             log.Close();
-            nowTime = (ulong)DateTime.Now.Ticks;
+            nowTime = DateTime.Now.Ticks;
             return 1;
         }
-        public static ulong WaitFrameTime()
+        public static long WaitFrameTime()
         {
             //Not work in Vsync-mode
-            ulong deltaTime;
-            while ((deltaTime = (ulong)DateTime.Now.Ticks - nowTime) < 1000f / fpsLimit)
+            long deltaTime;
+            while ((deltaTime = DateTime.Now.Ticks - nowTime) < 1000f / fpsLimit)
             {
                 DX.WaitTimer(1);
             }
-            DXcs.nowTime = (ulong)DateTime.Now.Ticks;
+            DXcs.nowTime = DateTime.Now.Ticks;
             DXcs.deltaTime = deltaTime;
-            oneFrameCalcTimeBuf = (ulong)DateTime.Now.Ticks;
+            oneFrameCalcTimeBuf = DateTime.Now.Ticks;
             return deltaTime;
         }
         public static void ClearGraphMemory()
         {
             if (graphHandleSet.Count == 0) return;
 #if DEBUG
+            int i = 0;
             int count = graphHandleSet.Count;
             string handleNames = "";
             foreach (var item in graphHandleSet)
             {
                 DX.DeleteGraph(item);
-                handleNames += item.ToString() + "\n";
+                handleNames += item.ToString() + " ";
+                if (++i == 6)
+                {
+                    handleNames += "\n";
+                    i = 0;
+                }
             }
             graphHandleSet.Clear();
             System.Windows.Forms.MessageBox.Show($"Handles deleted:{count}\n" + handleNames);
@@ -943,7 +949,6 @@ namespace TDAjam
         {
             return DX.GetWindowActiveFlag() == 1;
         }
-
 
 
 #endregion
