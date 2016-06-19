@@ -80,42 +80,48 @@ namespace TDAjam
         public static void TestSpriteZ()
         {
             GC.Collect();
-            DxImage img1 = new DxImage(@"RES\tama_01.png");
+            DxImage img1 = new DxImage(@"RES\chara_07.png");
             DxImage img2 = new DxImage(@"Res\tama_03.png");
-            DxSprite sp1 = new DxSprite(img1);
+            DxSprite sp1 = new DxSprite(img1, 3, 5);
             DxSprite sp2 = new DxSprite(img2);
-            int count = 30, speed = 3000;
+            int[] face = { 7, 10, 13, 10, 7, 4, 1, 4 };
+            int count = 15, speed = 5000;
+            double rollang = Math.PI;
             long start = DateTime.Now.Ticks;
             //DX.SetBackgroundColor(0, 128, 0);
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
                 DXcs.FrameBegin();
-
                 if(!DXcs.IsKeyDown (DX.KEY_INPUT_SPACE ))
                 {
                     DxLayer.Open();
-                    DxLayer.SetZ(-1000);
-                    sp1.SetScale(15, 15);
-                    sp1.DrawSprite(DXcs.CenterX, DXcs.CenterY);
                     for (int i = 0; i < count; i++)
                     {
                         double a, r;
                         float x, y, z;
-                        r = 60;
-                        a = DXcs.Scale((DateTime.Now.Ticks - start) / 10000 % speed, 0, speed, 0, Math.PI * 2) + Math.PI * 2 / count * i;
-                        z = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
-                        x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
-                        y = DXcs.CenterY - (count / 2 - i) * 8;
-                        DxLayer.SetZ(z);
-                        sp2.DrawSprite((int)x, (int)y);
-                        a += Math.PI - 1;
-                        z = DXcs.Sin(a, Math.PI * 2, r, DXcs.CenterY);
-                        x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
-                        y = DXcs.CenterY - (count / 2 - i) * 8;
-                        DxLayer.SetZ(z);
-                        sp2.DrawSprite((int)x, (int)y);
+                        for (int j = 0; j < 3; j++)
+                        {
+                            r = 60;
+                            a = DXcs.Scale((DateTime.Now.Ticks - start) / 10000 % speed, 0, speed, 0, Math.PI * 2) +
+                                rollang / count * i + j * 2.09f;
+                            if (a > Math.PI * 2)
+                                a -= Math.PI * 2;
+                            z = DXcs.Sin(a, Math.PI * 2, r, 0);
+                            x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
+                            y = DXcs.CenterY - (count / 2 - i) * 200/count + z / 2;
+                            DxLayer.SetZ(z);
+                            sp1.SetIndex(face[(int)((a + Math.PI / 8) / (Math.PI / 4)) % 8]);
+                            if (a >= Math.PI / 2 && a < Math.PI * 1.5f)
+                                sp1.SetScale(-1f, 1f);
+                            else
+                                sp1.SetScale(1f, 1f);
+                            sp1.DrawCellSprite((int)x, (int)y);
+                            DXcs.DrawText<int>((int)(x - sp1.cellW / 4), (int)(y - sp1.cellH), j, Color.White);
+                        }
                     }
+                    DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 128);
                     DxLayer.Close();
+                    DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255);
                     DXcs.DrawDebug("AntiAliasing Test");
                     DXcs.DrawDebug("Z test");
                     DXcs.DrawDebug("c=" + DxLayer.compareTimes + " times");
