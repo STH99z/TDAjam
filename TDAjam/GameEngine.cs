@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Drawing;
+using DxLibDLL;
 
 namespace TDAjam
 {
@@ -119,7 +120,7 @@ namespace TDAjam
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void MoveTo(float x,float y)
+        public void MoveTo(float x, float y)
         {
             posX = x;
             posY = y;
@@ -128,7 +129,7 @@ namespace TDAjam
         /// 移动到
         /// </summary>
         /// <param name="p"></param>
-        public void MoveTo (PointF p)
+        public void MoveTo(PointF p)
         {
             posX = p.X;
             posY = p.Y;
@@ -138,7 +139,7 @@ namespace TDAjam
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void MoveToAbs(float x,float y)
+        public void MoveToAbs(float x, float y)
         {
             PointF p = toPointFAbs();
             Move(x - p.X, y - p.Y);
@@ -276,7 +277,7 @@ namespace TDAjam
         /// <param name="cf">判定域</param>
         /// <param name="ent">实体</param>
         /// <returns></returns>
-        public static bool CollideWith(CollisionField cf,Entity ent)
+        public static bool CollideWith(CollisionField cf, Entity ent)
         {
             return cf.CollideWith(ent);
         }
@@ -332,7 +333,7 @@ namespace TDAjam
         /// <param name="pos">坐标</param>
         /// <param name="width">长</param>
         /// <param name="height">高</param>
-        public RectCollisionField(Position pos, float width, float height):base(pos)
+        public RectCollisionField(Position pos, float width, float height) : base(pos)
         {
             shape = FieldShape.round;
             this.width = width;
@@ -345,14 +346,32 @@ namespace TDAjam
         /// <returns>是否碰撞</returns>
         public override bool CollideWith(Entity ent)
         {
+            getXY();
             PointF p = ent.position.toPointFAbs();
+            return p.X > x1 && p.X < x2 && p.Y > y1 && p.Y < y2;
+        }
+        private void getXY()
+        {
+            PointF p = position.toPointFAbs();
             float x1, x2, y1, y2;
             x1 = p.X - halfWidth;
             x2 = x1 + _width;
             y1 = p.Y - halfHeight;
-            y2 = y1 + _height ;
-            return p.X > x1 && p.X < x2 && p.Y > y1 && p.Y < y2;
+            y2 = y1 + _height;
         }
+        private float x1, x2, y1, y2;
+#if DEBUG
+        public void DrawArea()
+        {
+            int a;
+            int m = DX.DX_BLENDMODE_ALPHA;
+            getXY();
+            DX.GetDrawBlendMode(out m, out a);
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 128);
+            DXcs.DrawBox((int)x1, (int)y1, (int)x2, (int)y2, Color.White, 1);
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, a);
+        }
+#endif
     }
     /// <summary>
     /// 圆形判定域类
@@ -360,10 +379,43 @@ namespace TDAjam
     [Serializable]
     class RoundCollisionField : CollisionField
     {
+        /// <summary>
+        /// 半径
+        /// </summary>
         public float radius { get; set; }
-        public RoundCollisionField(Position pos) : base(pos)
+        /// <summary>
+        /// 直径
+        /// </summary>
+        public float diameter
         {
+            get { return radius * 2; }
+            set { radius = value / 2; }
         }
+        public RoundCollisionField(Position pos, float radius) : base(pos)
+        {
+            this.radius = radius;
+        }
+        public override bool CollideWith(Entity ent)
+        {
+            PointF p = ent.position.toPointFAbs();
+            PointF c = position.toPointFAbs();
+            if (p.X > c.X - radius && p.X < c.X + radius && p.Y > c.Y - radius && p.Y < c.Y + radius)
+                if (DXcs.GetDistance(p.X - c.X, p.Y - c.Y) < radius)
+                    return true;
+            return false;
+        }
+#if DEBUG
+        public void DrawArea()
+        {
+            int a;
+            int m = DX.DX_BLENDMODE_ALPHA;
+            PointF p = position.toPointFAbs();
+            DX.GetDrawBlendMode(out m, out a);
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 128);
+            DX.DrawCircle((int)p.X, (int)p.Y, (int)radius, 0xffffffff);
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, a);
+        }
+#endif
     }
     /// <summary>
     /// 扇形判定域类
@@ -371,8 +423,51 @@ namespace TDAjam
     [Serializable]
     class FanCollitionField : CollisionField
     {
-        public FanCollitionField(Position pos) : base(pos)
+        /// <summary>
+        /// 扇形中心指向角度
+        /// </summary>
+        public float towards
         {
+            get { return _towards; }
+            set
+            {
+                _towards = value;
+                aleft = _towards - _spread;
+                aright = _towards + _spread;
+            }
+        }
+        /// <summary>
+        /// 从toward向左右打开的角度
+        /// </summary>
+        public float spread
+        {
+            get { return _spread; }
+            set
+            {
+                _spread = value;
+                aleft = _towards - _spread;
+                aright = _towards + _spread;
+            }
+        }
+        /// <summary>
+        /// 半径
+        /// </summary>
+        public float radius { get; set; }
+        private float _towards = 0f, _spread = 0f;
+        private float aleft, aright;
+        public FanCollitionField(Position pos, float radius, float towards, float spread) : base(pos)
+        {
+            this.radius = radius;
+            this.towards = towards;
+            this.spread = spread;
+        }
+        public override bool CollideWith(Entity ent)
+        {
+            PointF p = ent.position.toPointFAbs();
+            PointF c = position.toPointFAbs();
+            float dist = DXcs.GetDistance(p.X - c.X, p.Y - c.Y);
+            float ang = DXcs.GetTowards(c, p);
+            return DXcs.AngleInRange(ang, aleft, aright) && dist < radius;
         }
     }
     /// <summary>

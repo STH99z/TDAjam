@@ -27,6 +27,7 @@ namespace TDAjam
             //TestingUnit.TestingClocking();
             //TestingUnit.TestingAudio();
             //TestingUnit.Tt_Position();
+            TestingUnit.Tt_Math();
 #endif
 
             DXcs.DisposeAll();
@@ -283,7 +284,21 @@ namespace TDAjam
                 DXcs.FrameEnd(false);
             }
         }
+        public static void Tt_Math()
+        {
+            while(DXcs.IsWindowOpen () && !DXcs.IsKeyDown (DX.KEY_INPUT_ESCAPE ))
+            {
+                DXcs.FrameBegin();
+                int x, y;
+                DX.GetMousePoint(out x, out y);
+                DXcs.DrawDebug($"mousePos:({x},{y})");
+                DXcs.DrawDebug($"FrmCenter:({DXcs.CenterX },{DXcs.CenterY })");
+                DXcs.DrawDebug($"Math.Atan2:{Math.Atan2(y - DXcs.CenterY, x - DXcs.CenterX) }");
+                DXcs.DrawDebug($"Dxcs.GetDistance:{DXcs.GetDistance(y - DXcs.CenterY, x - DXcs.CenterX)}");
 
+                DXcs.FrameEnd();
+            }
+        }
     }
 #endif
 }

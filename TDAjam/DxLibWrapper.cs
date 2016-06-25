@@ -809,6 +809,67 @@ namespace TDAjam
             return (int)Tan(value, period, scale, offset);
         }
         public static float Pow2(float a) { return a * a; }
+        public static float GetDistance(float x,float y)
+        {
+            return (float)Math.Sqrt(Pow2(x) + Pow2(y));
+        }
+        /// <summary>
+        /// 返回-PI到PI的角度值
+        /// </summary>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="x2"></param>
+        /// <param name="y2"></param>
+        /// <returns></returns>
+        public static float GetTowards(float x1,float y1,float x2,float y2)
+        {
+            return (float)Math.Atan2(y2 - y1, x2 - x1);
+        }
+        /// <summary>
+        /// 返回-PI到PI的角度值
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        public static float GetTowards(PointF p1,PointF p2)
+        {
+            return (float)Math.Atan2(p2.Y - p1.Y, p2.X - p1.X);
+        }
+        /// <summary>
+        /// 将角度调整到0~2PI区间
+        /// </summary>
+        /// <param name="angle">角度</param>
+        /// <returns></returns>
+        public static float AdjustAngle2Basic(float angle)
+        {
+            while (angle > PI2f)
+                angle -= PI2f;
+            while (angle < 0)
+                angle += PI2f;
+            return angle;
+        }
+        /// <summary>
+        /// 将角度调整到-PI~PI区间
+        /// </summary>
+        /// <param name="angle">角度</param>
+        /// <returns></returns>
+        public static float AdjustAngle2HalfB(float angle)
+        {
+            while (angle > PIf)
+                angle -= PI2f;
+            while (angle < -PIf)
+                angle += PI2f;
+            return angle;
+        }
+        public static bool AngleInRange(float angle,float aleft,float aright)
+        {
+            //WIP
+            return true;
+        }
+        public const double PI2 = Math.PI * 2;
+        public const float PI2f = (float)(Math.PI * 2);
+        public const double PI = Math.PI;
+        public const float PIf = (float)(Math.PI);
 
         #endregion
 
