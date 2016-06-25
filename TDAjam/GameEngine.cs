@@ -168,8 +168,32 @@ namespace TDAjam
     [Serializable]
     class Entity
     {
+        /// <summary>
+        /// 实体的位置
+        /// </summary>
         public Position position { get; set; }
-        public Point center { get; set; } = new Point(0, 0);
+        /// <summary>
+        /// 图片中心相对实体中心的偏移
+        /// </summary>
+        public Point picCenter { get; set; } = new Point(0, 0);
+        /// <summary>
+        /// 实体形状枚举型
+        /// </summary>
+        public enum EntityShape
+        {
+            round = 0,
+            rect = 1
+        }
+        /// <summary>
+        /// 实体的形状
+        /// </summary>
+        public EntityShape shape { get; set; } = EntityShape.round;
+        /// <summary>
+        /// 实体的半径。形状为rect时为正方形半边长。
+        /// </summary>
+        public short radius { get; set; } = 0;
+        public DxSprite sprite { get; set; }
+
     }
     [Serializable]
     class Particle : Entity
@@ -207,15 +231,159 @@ namespace TDAjam
 
     }
 
+    /// <summary>
+    /// 判定域类
+    /// </summary>
     [Serializable]
-    class CollisionField { }
+    class CollisionField
+    {
+        /// <summary>
+        /// 访问和判定域绑定的位置
+        /// </summary>
+        public Position position { get; set; }
+        /// <summary>
+        /// 判定域形状枚举类
+        /// </summary>
+        public enum FieldShape
+        {
+            round = 0,
+            rect = 1,
+            fan = 2,
+            ellipse = 3
+        }
+        /// <summary>
+        /// 判定域形状
+        /// </summary>
+        public FieldShape shape { get; protected set; }
+        /// <summary>
+        /// 判断是否发生碰撞
+        /// </summary>
+        /// <param name="ent">需要判断的实体</param>
+        /// <returns></returns>
+        public virtual bool CollideWith(Entity ent)
+        {
+            return false;
+        }
+        internal protected CollisionField(Position pos)
+        {
+            position = pos;
+        }
+        ~CollisionField() { }
+
+        /// <summary>
+        /// 静态检测判定域和实体是否碰撞的方法
+        /// </summary>
+        /// <param name="cf">判定域</param>
+        /// <param name="ent">实体</param>
+        /// <returns></returns>
+        public static bool CollideWith(CollisionField cf,Entity ent)
+        {
+            return cf.CollideWith(ent);
+        }
+    }
+    /// <summary>
+    /// 矩形判定域类
+    /// </summary>
     [Serializable]
-    class RectCollisionField : CollisionField { }
+    class RectCollisionField : CollisionField
+    {
+        /// <summary>
+        /// 长
+        /// </summary>
+        public float width
+        {
+            get { return _width; }
+            set
+            {
+                this._width = value;
+            }
+        }
+        /// <summary>
+        /// 高
+        /// </summary>
+        public float height
+        {
+            get { return _height; }
+            set
+            {
+                this._height = value;
+            }
+        }
+        /// <summary>
+        /// 半长
+        /// </summary>
+        public float halfWidth
+        {
+            get { return width / 2; }
+            set { width = value * 2; }
+        }
+        /// <summary>
+        /// 半高
+        /// </summary>
+        public float halfHeight
+        {
+            get { return height / 2; }
+            set { height = value * 2; }
+        }
+        private float _width, _height;
+        /// <summary>
+        /// 构造矩形判定域
+        /// </summary>
+        /// <param name="pos">坐标</param>
+        /// <param name="width">长</param>
+        /// <param name="height">高</param>
+        public RectCollisionField(Position pos, float width, float height):base(pos)
+        {
+            shape = FieldShape.round;
+            this.width = width;
+            this.height = height;
+        }
+        /// <summary>
+        /// 检测是否和实体发生碰撞
+        /// </summary>
+        /// <param name="ent">实体</param>
+        /// <returns>是否碰撞</returns>
+        public override bool CollideWith(Entity ent)
+        {
+            PointF p = ent.position.toPointFAbs();
+            float x1, x2, y1, y2;
+            x1 = p.X - halfWidth;
+            x2 = x1 + _width;
+            y1 = p.Y - halfHeight;
+            y2 = y1 + _height ;
+            return p.X > x1 && p.X < x2 && p.Y > y1 && p.Y < y2;
+        }
+    }
+    /// <summary>
+    /// 圆形判定域类
+    /// </summary>
     [Serializable]
-    class RoundCollisionField : CollisionField { }
+    class RoundCollisionField : CollisionField
+    {
+        public float radius { get; set; }
+        public RoundCollisionField(Position pos) : base(pos)
+        {
+        }
+    }
+    /// <summary>
+    /// 扇形判定域类
+    /// </summary>
     [Serializable]
-    class FanCollitionField : CollisionField { }
+    class FanCollitionField : CollisionField
+    {
+        public FanCollitionField(Position pos) : base(pos)
+        {
+        }
+    }
+    /// <summary>
+    /// 椭圆形判定域类
+    /// </summary>
     [Serializable]
-    class EllipseCollitionField : CollisionField { }
+    class EllipseCollitionField : CollisionField
+    {
+        public EllipseCollitionField(Position pos) : base(pos)
+        {
+        }
+    }
 
 }

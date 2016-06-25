@@ -21,7 +21,7 @@ namespace TDAjam
 
 #if DEBUG
             //TestingUnit.TestSprite();
-            TestingUnit.TestSpriteZ();
+            //TestingUnit.TestSpriteZ();
             //TestingUnit.TestSingleAnimation();
             //TestingUnit.TestingInput();
             //TestingUnit.TestingClocking();
@@ -85,9 +85,9 @@ namespace TDAjam
             {
                 charalist[i] = new DxImage(@"RES\chara\chara_" + string.Format("{0:D2}", i + 1) + ".png");
             }
-            DxSprite sp1 = new DxSprite(charalist[0], 3, 5);
+            DxSprite sp1 = new DxSprite(charalist[0], 3, 5);    
             int[] face = { 7, 10, 13, 10, 7, 4, 1, 4 };
-            int count = 1, speed = 10000;
+            int count = 1, speed = 4000;
             double rollang = Math.PI;
             long start = DateTime.Now.Ticks;
             //DX.SetBackgroundColor(0, 128, 0);
