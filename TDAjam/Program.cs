@@ -290,15 +290,18 @@ namespace TDAjam
             {
                 DXcs.FrameBegin();
                 int x, y;
-                FanCollitionField fcf;
+                FanCollisionField fcf;
                 DX.GetMousePoint(out x, out y);
                 DXcs.DrawDebug($"mousePos:({x},{y})");
                 DXcs.DrawDebug($"FrmCenter:({DXcs.CenterX },{DXcs.CenterY })");
                 DXcs.DrawDebug($"Math.Atan2:{Math.Atan2(y - DXcs.CenterY, x - DXcs.CenterX) }");
                 DXcs.DrawDebug($"Dxcs.GetDistance:{DXcs.GetDistance(y - DXcs.CenterY, x - DXcs.CenterX)}");
+                DXcs.DrawDebug(1000f / DXcs.fpsLimit);
+                DXcs.DrawDebug(DXcs.deltaTime / 10000f);
 
-                fcf = new FanCollitionField(new Position(DXcs.CenterX, DXcs.CenterY), 100,
-                    (float)DXcs.Scale(DXcs.nowTime / 10000 % 3000, 0, 3000, 0, DXcs.PI2), 2f);
+                fcf = new FanCollisionField(new Position(DXcs.CenterX, DXcs.CenterY), 100,
+                    (float)DXcs.Scale(DXcs.nowTime / 10000 % 3000, 0, 3000, 0, DXcs.PI2),
+                    (float)DXcs.Scale(DXcs.nowTime / 10000 % 5000, 0, 5000, 0, DXcs.PIf));
                 DXcs.DrawLine(DXcs.CenterX, DXcs.CenterY,
                     DXcs.Cos(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.CenterX),
                     DXcs.Sin(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.CenterY),
@@ -323,13 +326,9 @@ namespace TDAjam
                 Entity ent = new Entity();
                 ent.position = new Position(x, y);
                 if(fcf.CollideWith (ent))
-                {
                     DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Blue, 1);
-                }
                 else
-                {
                     DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Red, 1);
-                }
 
                 DXcs.FrameEnd();
                 if (DXcs.nowTime / 10000 % 3000 < 20)

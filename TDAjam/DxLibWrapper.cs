@@ -650,7 +650,7 @@ namespace TDAjam
     {
         private const bool DEBUGMODE = true;
         private const int use3Dmode = 0;
-        private const float fpsLimit = 60f;
+        public const float fpsLimit = 120f;
         public static Random rnd;
         public static int FrmWidth, FrmHeight;
         public static int ResWidth, ResHeight;
@@ -924,6 +924,7 @@ namespace TDAjam
                 DX.SetWindowPosition(0, 100);
                 DX.ChangeWindowMode(1);
                 DX.SetWindowStyleMode(0);
+                DX.SetWaitVSyncFlag(0);
                 SetWindowSize(FrmSize[DefaultSizeIndex]);
             }
             else
@@ -931,6 +932,7 @@ namespace TDAjam
                 DX.SetWindowPosition(0, 0);
                 DX.ChangeWindowMode(1);
                 DX.SetWindowStyleMode(2);
+                DX.SetWaitVSyncFlag(0);
                 SetWindowSize(System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width, System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height);
             }
             DX.SetWindowIconHandle(TDAjam.Properties.Resources.ml.Handle);
@@ -966,15 +968,20 @@ namespace TDAjam
         public static long WaitFrameTime()
         {
             //Not work in Vsync-mode
-            long deltaTime;
-            while ((deltaTime = DateTime.Now.Ticks - nowTime) < 1000f / fpsLimit)
+            if (DX.GetWaitVSyncFlag() == 0)
             {
-                DX.WaitTimer(1);
+                long deltaTime;
+                while ((deltaTime = DateTime.Now.Ticks - nowTime) / 10000d < 1000f / fpsLimit)
+                {
+                    DX.WaitTimer(1);
+                }
+                DXcs.nowTime = DateTime.Now.Ticks;
+                DXcs.deltaTime = deltaTime;
+                oneFrameCalcTimeBuf = DateTime.Now.Ticks;
+                return deltaTime;
             }
-            DXcs.nowTime = DateTime.Now.Ticks;
-            DXcs.deltaTime = deltaTime;
-            oneFrameCalcTimeBuf = DateTime.Now.Ticks;
-            return deltaTime;
+            else
+                return 0;
         }
         public static void ClearGraphMemory()
         {

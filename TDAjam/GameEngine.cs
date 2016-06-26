@@ -194,6 +194,8 @@ namespace TDAjam
         /// </summary>
         public short radius { get; set; } = 0;
         public DxSprite sprite { get; set; }
+        public CollisionTargetType entityType { get; set; } = CollisionTargetType.none;
+        public CollisionType collisionType { get; set; } = new CollisionType(CollisionTargetType.none);
 
     }
     [Serializable]
@@ -421,7 +423,7 @@ namespace TDAjam
     /// 扇形判定域类
     /// </summary>
     [Serializable]
-    class FanCollitionField : CollisionField
+    class FanCollisionField : CollisionField
     {
         /// <summary>
         /// 扇形中心指向角度
@@ -455,7 +457,7 @@ namespace TDAjam
         public float radius { get; set; }
         private float _towards = 0f, _spread = 0f;
         private float aleft, aright;
-        public FanCollitionField(Position pos, float radius, float towards, float spread) : base(pos)
+        public FanCollisionField(Position pos, float radius, float towards, float spread) : base(pos)
         {
             this.radius = radius;
             this.towards = towards;
@@ -474,10 +476,50 @@ namespace TDAjam
     /// 椭圆形判定域类
     /// </summary>
     [Serializable]
-    class EllipseCollitionField : CollisionField
+    class EllipseCollisionField : CollisionField
     {
-        public EllipseCollitionField(Position pos) : base(pos)
+        //WIP
+        public EllipseCollisionField(Position pos) : base(pos)
         {
+        }
+    }
+
+    public enum CollisionTargetType
+    {
+        none = 0,
+        particle = 1,
+        bullet = 2,
+        breakable = 4,
+        player = 8,
+        mob = 16,
+        boss = 32
+    }
+    [Serializable]
+    class CollisionType
+    {
+        public byte collisionWith = 0;
+        public CollisionType (CollisionTargetType ctt_addable)
+        {
+            collisionWith = (byte)ctt_addable;
+        }
+        /// <summary>
+        /// 获取或设置是否发生碰撞
+        /// </summary>
+        /// <param name="ctt">碰撞体类型</param>
+        /// <returns></returns>
+        public bool this[CollisionTargetType ctt]
+        {
+            set
+            {
+                byte t = (byte)~(byte)ctt;
+                collisionWith &= t;
+                if (value)
+                    collisionWith += (byte)ctt;
+            }
+            get
+            {
+                return (collisionWith & (byte)ctt) > 0;
+            }
         }
     }
 
