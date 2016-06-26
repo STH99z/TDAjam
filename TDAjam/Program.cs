@@ -290,13 +290,50 @@ namespace TDAjam
             {
                 DXcs.FrameBegin();
                 int x, y;
+                FanCollitionField fcf;
                 DX.GetMousePoint(out x, out y);
                 DXcs.DrawDebug($"mousePos:({x},{y})");
                 DXcs.DrawDebug($"FrmCenter:({DXcs.CenterX },{DXcs.CenterY })");
                 DXcs.DrawDebug($"Math.Atan2:{Math.Atan2(y - DXcs.CenterY, x - DXcs.CenterX) }");
                 DXcs.DrawDebug($"Dxcs.GetDistance:{DXcs.GetDistance(y - DXcs.CenterY, x - DXcs.CenterX)}");
 
+                fcf = new FanCollitionField(new Position(DXcs.CenterX, DXcs.CenterY), 100,
+                    (float)DXcs.Scale(DXcs.nowTime / 10000 % 3000, 0, 3000, 0, DXcs.PI2), 2f);
+                DXcs.DrawLine(DXcs.CenterX, DXcs.CenterY,
+                    DXcs.Cos(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.CenterX),
+                    DXcs.Sin(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.CenterY),
+                    Color.White);
+                DXcs.DrawLine(DXcs.CenterX, DXcs.CenterY,
+                    DXcs.Cos(fcf.towards + fcf.spread, DXcs.PI2f, 100, DXcs.CenterX),
+                    DXcs.Sin(fcf.towards + fcf.spread, DXcs.PI2f, 100, DXcs.CenterY),
+                    Color.White);
+                float a = fcf.towards - fcf.spread;
+                for (int i = 0; i < 36; i++)
+                {
+                    float a1, a2;
+                    a1 = a + fcf.spread * 2 / 36 * i;
+                    a2 = a + fcf.spread * 2 / 36 * (i + 1);
+                    DXcs.DrawLine(
+                        DXcs.Cos(a1, DXcs.PI2f, 100, DXcs.CenterX),
+                        DXcs.Sin(a1, DXcs.PI2f, 100, DXcs.CenterY),
+                        DXcs.Cos(a2, DXcs.PI2f, 100, DXcs.CenterX),
+                        DXcs.Sin(a2, DXcs.PI2f, 100, DXcs.CenterY),
+                        Color.White);
+                }
+                Entity ent = new Entity();
+                ent.position = new Position(x, y);
+                if(fcf.CollideWith (ent))
+                {
+                    DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Blue, 1);
+                }
+                else
+                {
+                    DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Red, 1);
+                }
+
                 DXcs.FrameEnd();
+                if (DXcs.nowTime / 10000 % 3000 < 20)
+                    GC.Collect();
             }
         }
     }

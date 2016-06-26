@@ -861,10 +861,25 @@ namespace TDAjam
                 angle += PI2f;
             return angle;
         }
+        /// <summary>
+        /// 返回角度是否在所给范围内
+        /// </summary>
+        /// <param name="angle">已经调整至-PI~PI的角度</param>
+        /// <param name="aleft">角度左边界（较小）</param>
+        /// <param name="aright">角度右边界（较大）</param>
+        /// <returns></returns>
         public static bool AngleInRange(float angle,float aleft,float aright)
         {
-            //WIP
-            return true;
+            aleft = AdjustAngle2HalfB(aleft);
+            while (aright - aleft > PI2f)
+                aright -= PI2f;
+            while (aright - aleft < 0)
+                aright += PI2f;
+            while (angle - aleft > PI2f)
+                angle -= PI2f;
+            while (angle - aleft < 0)
+                angle += PI2f;
+            return aleft < angle && aright > angle;
         }
         public const double PI2 = Math.PI * 2;
         public const float PI2f = (float)(Math.PI * 2);
