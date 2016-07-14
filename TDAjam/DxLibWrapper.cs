@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using DxLibDLL;
 using System.Drawing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TDAjam
 {
     [Serializable]
-    class DGparams
+    internal class DGparams
     {
         /// <summary>
         /// 0=DrawGraph,1=DrawRotaGraph3,2=DrawRectRotaGraph3
@@ -22,7 +21,7 @@ namespace TDAjam
         /// <summary>
         /// Z-place
         /// </summary>
-        public float Z = 0f;
+        public float z = 0f;
         /// <summary>
         /// destnation
         /// </summary>
@@ -48,7 +47,7 @@ namespace TDAjam
         {
             method = 0;
             this.handle = handle;
-            Z = z;
+            this.z = z;
             destX = x;
             destY = y;
         }
@@ -58,7 +57,7 @@ namespace TDAjam
         {
             method = 1;
             this.handle = handle;
-            Z = z;
+            this.z = z;
             destX = x;
             destY = y;
             centX = centerX;
@@ -76,7 +75,7 @@ namespace TDAjam
         {
             method = 2;
             this.handle = handle;
-            Z = z;
+            this.z = z;
             destX = x;
             destY = y;
             centX = centerX;
@@ -95,7 +94,7 @@ namespace TDAjam
     /// Single wrapper for image handle.
     /// </summary>
     [Serializable]
-    class DxImage
+    internal class DxImage
     {
         public int handle;
         public int width, height;
@@ -151,7 +150,7 @@ namespace TDAjam
         /// </summary>
         public void UnloadImage()
         {
-            if (IsLoaded)
+            if (isLoaded)
             {
                 DX.DeleteGraph(handle, 1);
             }
@@ -168,7 +167,7 @@ namespace TDAjam
             DXcs.AddGraphHandle(handle);
             DX.GetGraphSize(handle, out width, out height);
         }
-        public bool IsLoaded
+        public bool isLoaded
         {
             get { return handle != -1; }
         }
@@ -201,7 +200,7 @@ namespace TDAjam
     /// Use SingleAnimation or Animation class for procedural changle usage.
     /// </summary>
     [Serializable]
-    class DxSprite
+    internal class DxSprite
     {
         public DxImage image;
         /// <summary>
@@ -379,12 +378,12 @@ namespace TDAjam
     /// Arrangement of arguments in DxSprite.
     /// </summary>
     [Serializable]
-    class DxSingleAnimation
+    internal class DxSingleAnimation
     {
         /// <summary>
         /// 变换信息类
         /// </summary>
-        public class transformInfo
+        public class TransformInfo
         {
             /// <summary>
             /// 插值枚举型
@@ -415,7 +414,7 @@ namespace TDAjam
             public InterpolationMethod interpolationMethod { get; set; }
             public string tag { get; set; }
 
-            public transformInfo(float value, InterpolationMethod method = InterpolationMethod.Linear, string Tag = "")
+            public TransformInfo(float value, InterpolationMethod method = InterpolationMethod.Linear, string Tag = "")
             {
                 this.value = value;
                 this.start = value;
@@ -424,7 +423,7 @@ namespace TDAjam
                 this.interpolationMethod = method;
                 this.tag = Tag;
             }
-            public transformInfo(float value, float start, float end, InterpolationMethod method, string Tag = "")
+            public TransformInfo(float value, float start, float end, InterpolationMethod method, string Tag = "")
             {
                 this.value = value;
                 this.start = start;
@@ -539,24 +538,27 @@ namespace TDAjam
         public PointF position { get; set; }
         public PointF positionStart { get; set; }
         public PointF positionEnd { get; set; }
-        public transformInfo posXTransform, posYTransform;
-        public transformInfo[] transform { get; private set; }
+        public TransformInfo posXTransform, posYTransform;
+        public TransformInfo[] transform { get; private set; }
         public bool[] useTransform { get; set; }
 
         /// <summary>
         /// Constructor of DxSingleAnimation.
         /// </summary>
         /// <param name="dxs"></param>
+        /// <param name="animationTime"></param>
+        /// <param name="indexMapping"></param>
+        /// <param name="positionControl"></param>
         public DxSingleAnimation(ref DxSprite dxs, float animationTime, bool indexMapping = false, bool positionControl = false)
         {
             sprite = dxs;
-            transform = new transformInfo[5]
+            transform = new TransformInfo[5]
             {
-                new transformInfo (sprite.scaleX),
-                new transformInfo(sprite.scaleY),
-                new transformInfo(sprite.angle),
-                new transformInfo(sprite.centerX),
-                new transformInfo (sprite.centerY)
+                new TransformInfo (sprite.scaleX),
+                new TransformInfo(sprite.scaleY),
+                new TransformInfo(sprite.angle),
+                new TransformInfo(sprite.centerX),
+                new TransformInfo (sprite.centerY)
             };
             useTransform = new bool[5] { false, false, false, false, false };
             this.useIndexMapping = indexMapping;
@@ -574,13 +576,13 @@ namespace TDAjam
         {
             this.indexMap = map;
         }
-        public void SetPosTransform(PointF startP, PointF endP, transformInfo.InterpolationMethod method)
+        public void SetPosTransform(PointF startP, PointF endP, TransformInfo.InterpolationMethod method)
         {
             usePositionControl = true;
             positionStart = startP;
             positionEnd = endP;
-            posXTransform = new transformInfo(positionStart.X, positionStart.X, positionEnd.X, method);
-            posYTransform = new transformInfo(positionStart.Y, positionStart.Y, positionEnd.Y, method);
+            posXTransform = new TransformInfo(positionStart.X, positionStart.X, positionEnd.X, method);
+            posYTransform = new TransformInfo(positionStart.Y, positionStart.Y, positionEnd.Y, method);
         }
         public void ApplyTransform()
         {
@@ -614,7 +616,7 @@ namespace TDAjam
                 sprite.SetIndex(indexMap[((timeNow - startTime) / (frameTime * 10000)) % (uint)indexMap.Length]);
             }
         }
-        public void SetTransform(TransformItem item, float start, float end, transformInfo.InterpolationMethod method)
+        public void SetTransform(TransformItem item, float start, float end, TransformInfo.InterpolationMethod method)
         {
             if (item == TransformItem.posX)
             {
@@ -646,42 +648,42 @@ namespace TDAjam
     /// <summary>
     /// DXcsharp wrapper class.
     /// </summary>
-    static class DXcs
+    internal static class DXcs
     {
         private const bool DEBUGMODE = true;
         private const int use3Dmode = 0;
         public const float fpsLimit = 120f;
         public static Random rnd;
-        public static int FrmWidth, FrmHeight;
-        public static int ResWidth, ResHeight;
+        public static int frmWidth, frmHeight;
+        public static int resWidth, resHeight;
         public static long nowTime;
         public static long deltaTime;
-        public static Size[] FrmSize;
-        public static int DefaultSizeIndex = 6;
-        public static int CenterX
+        public static Size[] frmSize;
+        public static int defaultSizeIndex = 6;
+        public static int centerX
         {
-            get { return ResWidth / 2; }
+            get { return resWidth / 2; }
         }
-        public static int CenterY
+        public static int centerY
         {
-            get { return ResHeight / 2; }
+            get { return resHeight / 2; }
         }
-        public static Point Center
+        public static Point center
         {
-            get { return new Point(CenterX, CenterY); }
+            get { return new Point(centerX, centerY); }
         }
-        public static int FontHeight { get; private set; }
-        public static int FontWidth { get; private set; }
-        private static int debugDrawIndex = 0;
+        public static int fontHeight { get; private set; }
+        public static int fontWidth { get; private set; }
+        private static int _debugDrawIndex = 0;
+        private static long _oneFrameCalcTimeBuf;
         public static long oneFrameCalcTime { get; private set; }
-        private static long oneFrameCalcTimeBuf;
 
-        private static HashSet<int> graphHandleSet;
+        private static readonly HashSet<int> graphHandleSet;
 
         static DXcs()
         {
             rnd = new Random();
-            FrmSize = new Size[]
+            frmSize = new Size[]
             {
                 new Size(640,360),  //nHD
                 new Size(720,405),
@@ -729,8 +731,8 @@ namespace TDAjam
             //国外论坛上找到的
             DX.RefreshDxLibDirect3DSetting();
             //Present和周期时间计算
-            debugDrawIndex = 0;
-            oneFrameCalcTime = DateTime.Now.Ticks - oneFrameCalcTimeBuf;
+            _debugDrawIndex = 0;
+            oneFrameCalcTime = DateTime.Now.Ticks - _oneFrameCalcTimeBuf;
             int result = DX.ScreenFlip();
             if (clearScreen)
             {
@@ -771,7 +773,7 @@ namespace TDAjam
         }
         public static void DrawDebug<T>(T infoToDraw)
         {
-            DrawText<T>(0, debugDrawIndex++ * FontHeight, infoToDraw, Color.White);
+            DrawText<T>(0, _debugDrawIndex++ * fontHeight, infoToDraw, Color.White);
         }
 
         #endregion
@@ -895,8 +897,8 @@ namespace TDAjam
         }
         public static void SetWindowSize(int width, int height)
         {
-            FrmWidth = width;
-            FrmHeight = height;
+            frmWidth = width;
+            frmHeight = height;
             DX.SetWindowSize(width, height);
         }
         public static void SetResolution(Size s, int colorBitsDepth = 32)
@@ -905,8 +907,8 @@ namespace TDAjam
         }
         public static void SetResolution(int width, int height, int colorBitsDepth = 32)
         {
-            ResWidth = width;
-            ResHeight = height;
+            resWidth = width;
+            resHeight = height;
             DX.SetGraphMode(width, height, colorBitsDepth);
         }
         public static void InitGameSettings()
@@ -925,7 +927,7 @@ namespace TDAjam
                 DX.ChangeWindowMode(1);
                 DX.SetWindowStyleMode(0);
                 DX.SetWaitVSyncFlag(0);
-                SetWindowSize(FrmSize[DefaultSizeIndex]);
+                SetWindowSize(frmSize[defaultSizeIndex]);
             }
             else
             {
@@ -940,10 +942,10 @@ namespace TDAjam
             DX.ChangeFont("Microsoft YaHei");
             DX.SetFontSize(20);
             DX.SetAlwaysRunFlag(1);
-            FontWidth = 20 / 2;
-            FontHeight = (int)(20 * 1.2);
+            fontWidth = 20 / 2;
+            fontHeight = (int)(20 * 1.2);
 
-            SetResolution(FrmSize[0]);
+            SetResolution(frmSize[0]);
             log.WriteLine($"{DX.SetFullSceneAntiAliasingMode(0, 0)}");
             log.WriteLine($"{DX.SetCreateDrawValidGraphMultiSample(0, 0)}");
             log.WriteLine($"{DX.SetUse3DFlag(use3Dmode)}");
@@ -977,7 +979,7 @@ namespace TDAjam
                 }
                 DXcs.nowTime = DateTime.Now.Ticks;
                 DXcs.deltaTime = deltaTime;
-                oneFrameCalcTimeBuf = DateTime.Now.Ticks;
+                _oneFrameCalcTimeBuf = DateTime.Now.Ticks;
                 return deltaTime;
             }
             else
@@ -994,11 +996,9 @@ namespace TDAjam
             {
                 DX.DeleteGraph(item);
                 handleNames += item.ToString() + " ";
-                if (++i == 6)
-                {
-                    handleNames += "\n";
-                    i = 0;
-                }
+                if (++i != 6) continue;
+                handleNames += "\n";
+                i = 0;
             }
             graphHandleSet.Clear();
             System.Windows.Forms.MessageBox.Show($"Handles deleted:{count}\n" + handleNames);
@@ -1205,7 +1205,7 @@ namespace TDAjam
     /// <summary>
     /// Simple sprite draw order control class
     /// </summary>
-    static class DxLayer
+    internal static class DxLayer
     {
         static DxLayer ()
         {
@@ -1223,7 +1223,7 @@ namespace TDAjam
 #if DEBUG
                 compareTimes++;
 #endif
-                return (int)Math.Round(x.Z - y.Z);
+                return (int)Math.Round(x.z - y.z);
                 //throw new NotImplementedException();
             }
         }

@@ -11,7 +11,7 @@ namespace TDAjam
     /// 位置坐标类
     /// </summary>
     [Serializable]
-    class Position
+    internal class Position
     {
         /// <summary>
         /// 位置的X坐标
@@ -167,7 +167,7 @@ namespace TDAjam
     }
 
     [Serializable]
-    class Entity
+    internal class Entity
     {
         /// <summary>
         /// 实体的位置
@@ -199,37 +199,37 @@ namespace TDAjam
 
     }
     [Serializable]
-    class Particle : Entity
+    internal class Particle : Entity
     {
 
     }
     [Serializable]
-    class Bullet : Particle
+    internal class Bullet : Particle
     {
 
     }
     [Serializable]
-    class Breakable : Particle
+    internal class Breakable : Particle
     {
 
     }
     [Serializable]
-    class Creature : Entity
+    internal class Creature : Entity
     {
 
     }
     [Serializable]
-    class Player : Creature
+    internal class Player : Creature
     {
 
     }
     [Serializable]
-    class Mob : Creature
+    internal class Mob : Creature
     {
 
     }
     [Serializable]
-    class Boss : Mob
+    internal class Boss : Mob
     {
 
     }
@@ -238,7 +238,7 @@ namespace TDAjam
     /// 判定域类
     /// </summary>
     [Serializable]
-    class CollisionField
+    internal class CollisionField
     {
         /// <summary>
         /// 访问和判定域绑定的位置
@@ -288,7 +288,7 @@ namespace TDAjam
     /// 矩形判定域类
     /// </summary>
     [Serializable]
-    class RectCollisionField : CollisionField
+    internal class RectCollisionField : CollisionField
     {
         /// <summary>
         /// 长
@@ -379,7 +379,7 @@ namespace TDAjam
     /// 圆形判定域类
     /// </summary>
     [Serializable]
-    class RoundCollisionField : CollisionField
+    internal class RoundCollisionField : CollisionField
     {
         /// <summary>
         /// 半径
@@ -423,7 +423,7 @@ namespace TDAjam
     /// 扇形判定域类
     /// </summary>
     [Serializable]
-    class FanCollisionField : CollisionField
+    internal class FanCollisionField : CollisionField
     {
         /// <summary>
         /// 扇形中心指向角度
@@ -476,7 +476,7 @@ namespace TDAjam
     /// 椭圆形判定域类
     /// </summary>
     [Serializable]
-    class EllipseCollisionField : CollisionField
+    internal class EllipseCollisionField : CollisionField
     {
         //WIP
         public EllipseCollisionField(Position pos) : base(pos)
@@ -495,7 +495,7 @@ namespace TDAjam
         boss = 32
     }
     [Serializable]
-    class CollisionType
+    internal class CollisionType
     {
         public byte collisionWith = 0;
         public CollisionType (CollisionTargetType ctt_addable)

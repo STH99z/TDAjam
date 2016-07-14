@@ -6,7 +6,7 @@ using DxLibDLL;
 
 namespace TDAjam
 {
-    static class Program
+    internal static class Program
     {
         public static bool bStop = false;
 
@@ -14,7 +14,7 @@ namespace TDAjam
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             DXcs.InitGameSettings();
             DXcs.InitForm("TouhouDungeonAdventure_Jam", true);
@@ -35,7 +35,7 @@ namespace TDAjam
         }
     }
 #if DEBUG
-    static class TestingUnit
+    internal static class TestingUnit
     {
         public static void TestSprite()
         {
@@ -51,25 +51,25 @@ namespace TDAjam
                 {
                     s.SetIndex(s.cellIndex + 1);
                 }
-                s.DrawCellSprite(DXcs.CenterX, DXcs.CenterY);
+                s.DrawCellSprite(DXcs.centerX, DXcs.centerY);
                 DX.DrawLine(
                     0,
-                    DXcs.ResHeight,
-                    (int)((float)iFrame * DXcs.ResWidth / 1000),
-                    DXcs.ResHeight,
+                    DXcs.resHeight,
+                    (int)((float)iFrame * DXcs.resWidth / 1000),
+                    DXcs.resHeight,
                     (uint)Color.White.ToArgb(), 20);
                 DXcs.DrawText(0, 0, "Running \"TestingUnit.TestSprite()\"", Color.White);
-                DXcs.DrawText(0, DXcs.FontHeight, typeof(DxSprite).FullName, Color.White);
+                DXcs.DrawText(0, DXcs.fontHeight, typeof(DxSprite).FullName, Color.White);
                 DXcs.DrawText(
-                    DXcs.CenterX + 50, DXcs.CenterY + 50,
+                    DXcs.centerX + 50, DXcs.centerY + 50,
                     s.cellIndex.ToString() + "/" + s.cellCount.ToString(), Color.White);
                 DXcs.DrawText(
-                    DXcs.CenterX + 50, DXcs.CenterY + DXcs.FontHeight + 50,
+                    DXcs.centerX + 50, DXcs.centerY + DXcs.fontHeight + 50,
                     s.cellPosition, Color.White);
 
                 DXcs.DrawText(
-                    (int)((float)iFrame * DXcs.ResWidth / 1000) - 35,
-                    DXcs.ResHeight - 30,
+                    (int)((float)iFrame * DXcs.resWidth / 1000) - 35,
+                    DXcs.resHeight - 30,
                     iFrame,
                     Color.Wheat);
 
@@ -110,8 +110,8 @@ namespace TDAjam
                             if (a > Math.PI * 2)
                                 a -= Math.PI * 2;
                             z = DXcs.Sin(a, Math.PI * 2, r, 0);
-                            x = DXcs.Cos(a, Math.PI * 2, r, DXcs.CenterX);
-                            y = DXcs.CenterY - (count / 2 - i) * 200 / count + z / 2;
+                            x = DXcs.Cos(a, Math.PI * 2, r, DXcs.centerX);
+                            y = DXcs.centerY - (count / 2 - i) * 200 / count + z / 2;
                             DxLayer.SetZ(z);
                             sp1.SetIndex(face[(int)((a + Math.PI / 8) / (Math.PI / 4)) % 8]);
                             sp1.image = charalist[j];
@@ -149,7 +149,7 @@ namespace TDAjam
             {
                 DXcs.FrameBegin();
                 dsa.ApplyTransform();
-                dsa.DrawAnimationFrame(DXcs.CenterX, DXcs.CenterY);
+                dsa.DrawAnimationFrame(DXcs.centerX, DXcs.centerY);
                 s.DrawSprite(20, 163);
                 DXcs.DrawDebug("TestingUnit.TestSingleAnimation()");
                 DXcs.DrawDebug(typeof(DxSingleAnimation));
@@ -159,9 +159,9 @@ namespace TDAjam
                 DXcs.DrawDebug("Frame:" + iFrame);
                 DX.DrawBox(
                     0,
-                    DXcs.ResHeight - 10,
-                    (int)DXcs.Scale(iFrame, 0, totalFrame, 0, DXcs.ResWidth),
-                    DXcs.ResHeight,
+                    DXcs.resHeight - 10,
+                    (int)DXcs.Scale(iFrame, 0, totalFrame, 0, DXcs.resWidth),
+                    DXcs.resHeight,
                     (uint)Color.White.ToArgb(), 1);
 
                 DXcs.FrameEnd();
@@ -244,7 +244,7 @@ namespace TDAjam
             int tp = 180;
             float pi23 = (float)Math.PI * 2 / 3;
             float pi2 = (float)Math.PI * 2;
-            Position p = new Position(DXcs.ResWidth / 2, DXcs.ResHeight / 2);
+            Position p = new Position(DXcs.resWidth / 2, DXcs.resHeight / 2);
             List<Position> pl = new List<Position>();
             Random rnd = new Random();
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
@@ -279,7 +279,7 @@ namespace TDAjam
                         DXcs.DrawLine(pl[i - 1].toPointFAbs(), pl[i].toPointFAbs(), Color.White);
                 }
                 DXcs.DrawLine(pl[pl.Count - 1].toPointFAbs(), pl[0].toPointFAbs(), Color.White);
-                DXcs.DrawBox(0, 0, DXcs.ResWidth, DXcs.ResHeight, Color.FromArgb(16, Color.Black), 1);
+                DXcs.DrawBox(0, 0, DXcs.resWidth, DXcs.resHeight, Color.FromArgb(16, Color.Black), 1);
 
                 DXcs.FrameEnd(false);
             }
@@ -293,22 +293,22 @@ namespace TDAjam
                 FanCollisionField fcf;
                 DX.GetMousePoint(out x, out y);
                 DXcs.DrawDebug($"mousePos:({x},{y})");
-                DXcs.DrawDebug($"FrmCenter:({DXcs.CenterX },{DXcs.CenterY })");
-                DXcs.DrawDebug($"Math.Atan2:{Math.Atan2(y - DXcs.CenterY, x - DXcs.CenterX) }");
-                DXcs.DrawDebug($"Dxcs.GetDistance:{DXcs.GetDistance(y - DXcs.CenterY, x - DXcs.CenterX)}");
+                DXcs.DrawDebug($"FrmCenter:({DXcs.centerX },{DXcs.centerY })");
+                DXcs.DrawDebug($"Math.Atan2:{Math.Atan2(y - DXcs.centerY, x - DXcs.centerX) }");
+                DXcs.DrawDebug($"Dxcs.GetDistance:{DXcs.GetDistance(y - DXcs.centerY, x - DXcs.centerX)}");
                 DXcs.DrawDebug(1000f / DXcs.fpsLimit);
                 DXcs.DrawDebug(DXcs.deltaTime / 10000f);
 
-                fcf = new FanCollisionField(new Position(DXcs.CenterX, DXcs.CenterY), 100,
+                fcf = new FanCollisionField(new Position(DXcs.centerX, DXcs.centerY), 100,
                     (float)DXcs.Scale(DXcs.nowTime / 10000 % 3000, 0, 3000, 0, DXcs.PI2),
                     (float)DXcs.Scale(DXcs.nowTime / 10000 % 5000, 0, 5000, 0, DXcs.PIf));
-                DXcs.DrawLine(DXcs.CenterX, DXcs.CenterY,
-                    DXcs.Cos(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.CenterX),
-                    DXcs.Sin(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.CenterY),
+                DXcs.DrawLine(DXcs.centerX, DXcs.centerY,
+                    DXcs.Cos(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.centerX),
+                    DXcs.Sin(fcf.towards - fcf.spread, DXcs.PI2f, 100, DXcs.centerY),
                     Color.White);
-                DXcs.DrawLine(DXcs.CenterX, DXcs.CenterY,
-                    DXcs.Cos(fcf.towards + fcf.spread, DXcs.PI2f, 100, DXcs.CenterX),
-                    DXcs.Sin(fcf.towards + fcf.spread, DXcs.PI2f, 100, DXcs.CenterY),
+                DXcs.DrawLine(DXcs.centerX, DXcs.centerY,
+                    DXcs.Cos(fcf.towards + fcf.spread, DXcs.PI2f, 100, DXcs.centerX),
+                    DXcs.Sin(fcf.towards + fcf.spread, DXcs.PI2f, 100, DXcs.centerY),
                     Color.White);
                 float a = fcf.towards - fcf.spread;
                 for (int i = 0; i < 36; i++)
@@ -317,10 +317,10 @@ namespace TDAjam
                     a1 = a + fcf.spread * 2 / 36 * i;
                     a2 = a + fcf.spread * 2 / 36 * (i + 1);
                     DXcs.DrawLine(
-                        DXcs.Cos(a1, DXcs.PI2f, 100, DXcs.CenterX),
-                        DXcs.Sin(a1, DXcs.PI2f, 100, DXcs.CenterY),
-                        DXcs.Cos(a2, DXcs.PI2f, 100, DXcs.CenterX),
-                        DXcs.Sin(a2, DXcs.PI2f, 100, DXcs.CenterY),
+                        DXcs.Cos(a1, DXcs.PI2f, 100, DXcs.centerX),
+                        DXcs.Sin(a1, DXcs.PI2f, 100, DXcs.centerY),
+                        DXcs.Cos(a2, DXcs.PI2f, 100, DXcs.centerX),
+                        DXcs.Sin(a2, DXcs.PI2f, 100, DXcs.centerY),
                         Color.White);
                 }
                 Entity ent = new Entity();
