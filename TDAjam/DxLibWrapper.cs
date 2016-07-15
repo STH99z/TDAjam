@@ -652,26 +652,19 @@ namespace TDAjam
     {
         private const bool DEBUGMODE = true;
         private const int use3Dmode = 0;
-        public const float fpsLimit = 120f;
-        public static Random rnd;
-        public static int frmWidth, frmHeight;
-        public static int resWidth, resHeight;
-        public static long nowTime;
-        public static long deltaTime;
-        public static Size[] frmSize;
-        public static int defaultSizeIndex = 6;
-        public static int centerX
-        {
-            get { return resWidth / 2; }
-        }
-        public static int centerY
-        {
-            get { return resHeight / 2; }
-        }
-        public static Point center
-        {
-            get { return new Point(centerX, centerY); }
-        }
+        public static float fpsLimit { get; set; } = 120f;
+        public static Random rnd { get; }
+        public static int frmWidth { get; set; }
+        public static int frmHeight { get; set; }
+        public static int resWidth { get; set; }
+        public static int resHeight { get; set; }
+        public static long nowTime { get; set; }
+        public static long deltaTime { get; set; }
+        public static Size[] frmSize { get; }
+        public static int defaultSizeIndex { get; set; } = 6;
+        public static int centerX => resWidth / 2;
+        public static int centerY => resHeight / 2;
+        public static Point center => new Point(centerX, centerY);
         public static int fontHeight { get; private set; }
         public static int fontWidth { get; private set; }
         private static int _debugDrawIndex = 0;

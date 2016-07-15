@@ -31,7 +31,7 @@ namespace TDAjam
             posY = _y;
             parentPosition = _parentPosition;
         }
-        private float pow2(float a)
+        private static float pow2(float a)
         {
             return a * a;
         }

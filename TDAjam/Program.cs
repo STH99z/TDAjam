@@ -290,7 +290,6 @@ namespace TDAjam
             {
                 DXcs.FrameBegin();
                 int x, y;
-                FanCollisionField fcf;
                 DX.GetMousePoint(out x, out y);
                 DXcs.DrawDebug($"mousePos:({x},{y})");
                 DXcs.DrawDebug($"FrmCenter:({DXcs.centerX },{DXcs.centerY })");
@@ -299,7 +298,7 @@ namespace TDAjam
                 DXcs.DrawDebug(1000f / DXcs.fpsLimit);
                 DXcs.DrawDebug(DXcs.deltaTime / 10000f);
 
-                fcf = new FanCollisionField(new Position(DXcs.centerX, DXcs.centerY), 100,
+                var fcf = new FanCollisionField(new Position(DXcs.centerX, DXcs.centerY), 100,
                     (float)DXcs.Scale(DXcs.nowTime / 10000 % 3000, 0, 3000, 0, DXcs.PI2),
                     (float)DXcs.Scale(DXcs.nowTime / 10000 % 5000, 0, 5000, 0, DXcs.PIf));
                 DXcs.DrawLine(DXcs.centerX, DXcs.centerY,
@@ -323,8 +322,7 @@ namespace TDAjam
                         DXcs.Sin(a2, DXcs.PI2f, 100, DXcs.centerY),
                         Color.White);
                 }
-                Entity ent = new Entity();
-                ent.position = new Position(x, y);
+                Entity ent = new Entity {position = new Position(x, y)};
                 if(fcf.CollideWith (ent))
                     DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Blue, 1);
                 else
