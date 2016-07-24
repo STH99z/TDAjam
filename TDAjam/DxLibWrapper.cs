@@ -364,13 +364,16 @@ namespace TDAjam
         /// <param name="destY">destination y</param>
         public void DrawCellSprite(int destX, int destY)
         {
-            image.DrawImageClipAdv(
-                destX, destY,
-                cellX, cellY,
-                (int)cellW, (int)cellH,
-                centerX, centerY,
-                scaleX, scaleY,
-                angle);
+            if (cellCount > 1)
+                image.DrawImageClipAdv(
+                    destX, destY,
+                    cellX, cellY,
+                    (int)cellW, (int)cellH,
+                    centerX, centerY,
+                    scaleX, scaleY,
+                    angle);
+            else
+                DrawSprite(destX, destY);
         }
 
     }
@@ -652,7 +655,7 @@ namespace TDAjam
     {
         private const bool DEBUGMODE = true;
         private const int use3Dmode = 0;
-        public static float fpsLimit { get; set; } = 120f;
+        public static float fpsLimit { get; set; } = 60f;
         public static Random rnd { get; }
         public static int frmWidth { get; set; }
         public static int frmHeight { get; set; }
@@ -734,7 +737,7 @@ namespace TDAjam
             }
             return result;
         }
-        public static void DrawLine(PointF p1,PointF p2,Color col)
+        public static void DrawLine(PointF p1, PointF p2, Color col)
         {
             DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
             DX.DrawLine((int)p1.X, (int)p1.Y, (int)p2.X, (int)p2.Y, (uint)col.ToArgb());
@@ -780,34 +783,25 @@ namespace TDAjam
             return value;
         }
         public static double SinD(double value, double period, double scale, double offset = 0d)
-        {
-            return Math.Sin(value / period * Math.PI * 2) * scale + offset;
-        }
+            => Math.Sin(value / period * Math.PI * 2) * scale + offset;
         public static double CosD(double value, double period, double scale, double offset = 0d)
-        {
-            return Math.Cos(value / period * Math.PI * 2) * scale + offset;
-        }
+            => Math.Cos(value / period * Math.PI * 2) * scale + offset;
         public static double TanD(double value, double period, double scale, double offset = 0d)
-        {
-            return Math.Tan(value / period * Math.PI * 2) * scale + offset;
-        }
+            => Math.Tan(value / period * Math.PI * 2) * scale + offset;
         public static int Sin(double value, double period, double scale, double offset = 0d)
-        {
-            return (int)SinD(value, period, scale, offset);
-        }
+            => (int)SinD(value, period, scale, offset);
         public static int Cos(double value, double period, double scale, double offset = 0d)
-        {
-            return (int)CosD(value, period, scale, offset);
-        }
+            => (int)CosD(value, period, scale, offset);
         public static int Tan(double value, double period, double scale, double offset = 0d)
-        {
-            return (int)Tan(value, period, scale, offset);
-        }
-        public static float Pow2(float a) { return a * a; }
-        public static float GetDistance(float x,float y)
-        {
-            return (float)Math.Sqrt(Pow2(x) + Pow2(y));
-        }
+            => (int)TanD(value, period, scale, offset);
+        public static float Pow2(float a) 
+            => a * a;
+        public static float Pow3(float a) 
+            => a * a * a;
+        public static float Sqrt(float a) 
+            => (float)Math.Sqrt(a);
+        public static float GetDistance(float x, float y)
+            => (float)Math.Sqrt(x * x + y * y);
         /// <summary>
         /// 返回-PI到PI的角度值
         /// </summary>
@@ -816,20 +810,16 @@ namespace TDAjam
         /// <param name="x2"></param>
         /// <param name="y2"></param>
         /// <returns></returns>
-        public static float GetTowards(float x1,float y1,float x2,float y2)
-        {
-            return (float)Math.Atan2(y2 - y1, x2 - x1);
-        }
+        public static float GetTowards(float x1, float y1, float x2, float y2)
+            => (float)Math.Atan2(y2 - y1, x2 - x1);
         /// <summary>
         /// 返回-PI到PI的角度值
         /// </summary>
         /// <param name="p1"></param>
         /// <param name="p2"></param>
         /// <returns></returns>
-        public static float GetTowards(PointF p1,PointF p2)
-        {
-            return (float)Math.Atan2(p2.Y - p1.Y, p2.X - p1.X);
-        }
+        public static float GetTowards(PointF p1, PointF p2)
+            => (float)Math.Atan2(p2.Y - p1.Y, p2.X - p1.X);
         /// <summary>
         /// 将角度调整到0~2PI区间
         /// </summary>
@@ -863,7 +853,7 @@ namespace TDAjam
         /// <param name="aleft">角度左边界（较小）</param>
         /// <param name="aright">角度右边界（较大）</param>
         /// <returns></returns>
-        public static bool AngleInRange(float angle,float aleft,float aright)
+        public static bool AngleInRange(float angle, float aleft, float aright)
         {
             aleft = AdjustAngle2HalfB(aleft);
             while (aright - aleft > PI2f)
@@ -1027,9 +1017,9 @@ namespace TDAjam
         }
 
 
-#endregion
+        #endregion
 
-#region InputRelated
+        #region InputRelated
         /// <summary>
         /// 按键状态，外部访问通过函数，每帧通过UpdateKeyStatus更新
         /// </summary>
@@ -1082,9 +1072,9 @@ namespace TDAjam
             }
         }
 
-#endregion
+        #endregion
 
-#region AudioRelated
+        #region AudioRelated
         private static Dictionary<string, int> musicHandleDic;
         /// <summary>
         /// 载入MP3文件到内存
@@ -1193,7 +1183,7 @@ namespace TDAjam
             musicHandleDic.Clear();
         }
 
-#endregion
+        #endregion
     }
     /// <summary>
     /// Simple sprite draw order control class

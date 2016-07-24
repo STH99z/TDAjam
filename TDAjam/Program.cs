@@ -286,6 +286,7 @@ namespace TDAjam
         }
         public static void Tt_Math()
         {
+            DXcs.fpsLimit = 120f;
             while(DXcs.IsWindowOpen () && !DXcs.IsKeyDown (DX.KEY_INPUT_ESCAPE ))
             {
                 DXcs.FrameBegin();

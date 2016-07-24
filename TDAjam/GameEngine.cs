@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Drawing;
 using DxLibDLL;
+using System.Runtime.InteropServices;
 
 namespace TDAjam
 {
@@ -166,6 +167,167 @@ namespace TDAjam
         }
     }
 
+    /// <summary>
+    /// 向量接口
+    /// </summary>
+    interface IVector
+    {
+        float X { get; set; }
+        float Y { get; set; }
+        float Angle { get; set; }
+        float Length { get; set; }
+        float this[int v] { get; set; }
+    }
+    /// <summary>
+    /// 2D向量，用作速度等其他类包含的基础类型
+    /// </summary>
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    internal class Vector2D : IVector
+    {
+        private float x = 0;
+        private float y = 0;
+        public float X
+        {
+            get { return x; }
+            set { x = value; }
+        }
+        public float Y
+        {
+            get { return y; }
+            set { y = value; }
+        }
+        public float this[int v]
+        {
+            set
+            {
+                if (v == 0)
+                    X = v;
+                else
+                    Y = v;
+            }
+            get
+            {
+                if (v == 0)
+                    return X;
+                return Y;
+            }
+        }
+        public float Length
+        {
+            get
+            {
+                return (float)Math.Sqrt(X * X + Y * Y);
+            }
+            set
+            {
+                float a = Angle;
+                X = (float)Math.Cos(a) * value;
+                Y = (float)Math.Sin(a) * value;
+            }
+        }
+        public float Angle
+        {
+            get
+            {
+                return (float)Math.Atan2(Y, X);
+            }
+            set
+            {
+                float l = Length;
+                X = (float)Math.Cos(value) * l;
+                Y = (float)Math.Sin(value) * l;
+            }
+        }
+        public Vector2D() { }
+        public Vector2D(float x, float y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+        public PolarVector2D ToPolarVector2D()
+            => new PolarVector2D(Angle, Length);
+        public static Vector2D operator +(Vector2D v1, Vector2D v2)
+            => new Vector2D(v1.X + v2.X, v1.Y + v2.Y);
+        public static Vector2D operator -(Vector2D v1, Vector2D v2)
+            => new Vector2D(v1.X - v2.X, v1.Y - v2.Y);
+        public override string ToString()
+            => $"{{{X},{Y}}}";
+    }
+    /// <summary>
+    /// 2D向量，极坐标系下
+    /// </summary>
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    internal class PolarVector2D : IVector
+    {
+        private float length = 0f;
+        private float angle = 0f;
+        public float X
+        {
+            get { return (float)Math.Cos(angle) * length; }
+            set
+            {
+                float temp = Y;
+                length = (float)Math.Sqrt(value * value + temp * temp);
+                angle = (float)Math.Atan2(temp, value);
+            }
+        }
+        public float Y
+        {
+            get { return (float)Math.Sin(angle) * length; }
+            set
+            {
+                float temp = X;
+                length = (float)Math.Sqrt(value * value + temp * temp);
+                angle = (float)Math.Atan2(value, temp);
+            }
+        }
+        public float this[int v]
+        {
+            get
+            {
+                if (v == 0)
+                    return X;
+                return Y;
+            }
+            set
+            {
+                if (v == 0)
+                    X = value;
+                else
+                    Y = value;
+            }
+        }
+        public float Length
+        {
+            get { return length; }
+            set { length = value; }
+        }
+        public float Angle
+        {
+            get { return angle; }
+            set { angle = value; }
+        }
+        public PolarVector2D() { }
+        public PolarVector2D(float angle, float length)
+        {
+            this.angle = angle;
+            this.length = length;
+        }
+        public Vector2D ToVector2D()
+            => new Vector2D(X, Y);
+        public static PolarVector2D operator +(PolarVector2D v1, PolarVector2D v2)
+            => new PolarVector2D(v1.angle + v2.angle, v1.length + v2.length);
+        public static PolarVector2D operator -(PolarVector2D v1, PolarVector2D v2)
+            => new PolarVector2D(v1.angle - v2.angle, v1.length - v2.length);
+        public override string ToString()
+            => $"{{{X},{Y}}}";
+    }
+
+    /// <summary>
+    /// 实体类
+    /// </summary>
     [Serializable]
     internal class Entity
     {
@@ -176,7 +338,7 @@ namespace TDAjam
         /// <summary>
         /// 图片中心相对实体中心的偏移
         /// </summary>
-        public Point picCenter { get; set; } = new Point(0, 0);
+        public Point picCenter { get; set; }
         /// <summary>
         /// 实体形状枚举型
         /// </summary>
@@ -193,45 +355,136 @@ namespace TDAjam
         /// 实体的半径。形状为rect时为正方形半边长。
         /// </summary>
         public short radius { get; set; } = 0;
+        /// <summary>
+        /// 精灵图
+        /// </summary>
         public DxSprite sprite { get; set; }
+        /// <summary>
+        /// 这个实体本身是什么碰撞类型
+        /// </summary>
         public CollisionTargetType entityType { get; set; } = CollisionTargetType.none;
+        /// <summary>
+        /// 这个实体要和其他的什么类型碰撞
+        /// </summary>
         public CollisionType collisionType { get; set; } = new CollisionType(CollisionTargetType.none);
 
+        public Entity(Position pos, float rad = 0f)
+        {
+            position = pos;
+            picCenter = new Point(0, 0);
+            rad = 0;
+        }
+        /// <summary>
+        /// 默认绘制，使用Sprite的DrawCellSprite
+        /// </summary>
+        public virtual void Draw()
+        {
+            sprite.DrawCellSprite((int)position.posX, (int)position.posY);
+        }
     }
     [Serializable]
     internal class Particle : Entity
     {
+        public Particle(IVector speed, Position pos, float rad = 0) : base(pos, rad)
+        {
+            velocity = speed;
+            entityType = CollisionTargetType.particle;
+        }
 
+        /// <summary>
+        /// 速度
+        /// </summary>
+        public IVector velocity { get; set; }
+        /// <summary>
+        /// 是否使用DxSingleAnimation类绘制
+        /// </summary>
+        public bool useAnimation { get; set; }
+        /// <summary>
+        /// animation对象
+        /// </summary>
+        public DxSingleAnimation animation { get; set; } = null;
+
+        /// <summary>
+        /// 叠加速度。类似差分机和帧Based原理，改变当前粒子移速。
+        /// </summary>
+        /// <param name="deltaTime">距离上一次操作的时间差，单位毫秒</param>
+        public void ApplyVelocity(long deltaTime)
+        {
+            position.Move(velocity.X * deltaTime / 1000, velocity.Y * deltaTime / 1000);
+        }
+        /// <summary>
+        /// 绘制
+        /// </summary>
+        public override void Draw()
+        {
+            if (useAnimation)
+                animation.DrawAnimationFrame((int)position.posX, (int)position.posY);
+            //WIP
+            else
+                base.Draw();
+        }
     }
     [Serializable]
     internal class Bullet : Particle
     {
+        public Bullet(IVector speed, Position pos, float rad = 0) : base(speed, pos, rad)
+        {
+            entityType = CollisionTargetType.bullet;
+        }
 
+        public enum BulletType
+        {
+            normal = 0
+            //WIP
+        }
     }
     [Serializable]
     internal class Breakable : Particle
     {
-
+        public Breakable(Position pos, float rad = 0) : base(new Vector2D(0, 0), pos, rad)
+        {
+            entityType = CollisionTargetType.breakable;
+        }
     }
     [Serializable]
     internal class Creature : Entity
     {
+        public Creature(Position pos, float rad = 0) : base(pos, rad)
+        {
+            entityType = CollisionTargetType.creature;
+            group = 0;
+        }
 
+        /// <summary>
+        /// 友好分组，同组为friendly，中立为0
+        /// </summary>
+        public int group { get; set; }
     }
     [Serializable]
     internal class Player : Creature
     {
-
+        public Player(Position pos, float rad = 0) : base(pos, rad)
+        {
+            entityType = CollisionTargetType.player;
+            group = 1;
+        }
     }
     [Serializable]
     internal class Mob : Creature
     {
-
+        public Mob(Position pos, float rad = 0) : base(pos, rad)
+        {
+            entityType = CollisionTargetType.mob;
+            group = 2;
+        }
     }
     [Serializable]
     internal class Boss : Mob
     {
-
+        public Boss(Position pos, float rad = 0) : base(pos, rad)
+        {
+            entityType = CollisionTargetType.boss;
+        }
     }
 
     /// <summary>
@@ -272,6 +525,9 @@ namespace TDAjam
             position = pos;
         }
         ~CollisionField() { }
+#if DEBUG
+        public virtual void DrawArea() { }
+#endif
 
         /// <summary>
         /// 静态检测判定域和实体是否碰撞的方法
@@ -363,7 +619,7 @@ namespace TDAjam
         }
         private float x1, x2, y1, y2;
 #if DEBUG
-        public void DrawArea()
+        public override void DrawArea()
         {
             int a;
             int m = DX.DX_BLENDMODE_ALPHA;
@@ -407,7 +663,7 @@ namespace TDAjam
             return false;
         }
 #if DEBUG
-        public void DrawArea()
+        public override void DrawArea()
         {
             int a;
             int m = DX.DX_BLENDMODE_ALPHA;
@@ -486,19 +742,20 @@ namespace TDAjam
 
     public enum CollisionTargetType
     {
-        none = 0,
+        none    = 0,
         particle = 1,
-        bullet = 2,
+        bullet  = 2,
         breakable = 4,
-        player = 8,
-        mob = 16,
-        boss = 32
+        player  = 8,
+        mob     = 16,
+        boss    = 32,
+        creature = 64
     }
     [Serializable]
     internal class CollisionType
     {
         public byte collisionWith = 0;
-        public CollisionType (CollisionTargetType ctt_addable)
+        public CollisionType(CollisionTargetType ctt_addable)
         {
             collisionWith = (byte)ctt_addable;
         }
