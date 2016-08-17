@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace TDAjam
 {
+    #region Basic
     /// <summary>
     /// 位置坐标类
     /// </summary>
@@ -167,6 +168,11 @@ namespace TDAjam
         }
     }
 
+    public enum VectorType
+    {
+        Vector,
+        PolarVector
+    }
     /// <summary>
     /// 向量接口
     /// </summary>
@@ -177,6 +183,7 @@ namespace TDAjam
         float Angle { get; set; }
         float Length { get; set; }
         float this[int v] { get; set; }
+        VectorType vectorType { get; }
     }
     /// <summary>
     /// 2D向量，用作速度等其他类包含的基础类型
@@ -185,8 +192,8 @@ namespace TDAjam
     [StructLayout(LayoutKind.Sequential)]
     internal class Vector2D : IVector
     {
-        private float x = 0;
-        private float y = 0;
+        private float x = 0f;
+        private float y = 0f;
         public float X
         {
             get { return x; }
@@ -239,11 +246,24 @@ namespace TDAjam
                 Y = (float)Math.Sin(value) * l;
             }
         }
+        public VectorType vectorType
+        {
+            get
+            {
+                return VectorType.Vector;
+            }
+        }
+
         public Vector2D() { }
         public Vector2D(float x, float y)
         {
             this.x = x;
             this.y = y;
+        }
+        public Vector2D(double x, double y)
+        {
+            this.x = (float)x;
+            this.y = (float)y;
         }
         public PolarVector2D ToPolarVector2D()
             => new PolarVector2D(Angle, Length);
@@ -309,6 +329,14 @@ namespace TDAjam
             get { return angle; }
             set { angle = value; }
         }
+        public VectorType vectorType
+        {
+            get
+            {
+                return VectorType.PolarVector;
+            }
+        }
+
         public PolarVector2D() { }
         public PolarVector2D(float angle, float length)
         {
@@ -325,6 +353,8 @@ namespace TDAjam
             => $"{{{X},{Y}}}";
     }
 
+    #endregion
+    #region  Entity
     /// <summary>
     /// 实体类
     /// </summary>
@@ -345,7 +375,9 @@ namespace TDAjam
         public enum EntityShape
         {
             round = 0,
-            rect = 1
+            rect = 1,
+            fan = 2,
+            ellipse = 3
         }
         /// <summary>
         /// 实体的形状
@@ -354,11 +386,38 @@ namespace TDAjam
         /// <summary>
         /// 实体的半径。形状为rect时为正方形半边长。
         /// </summary>
-        public short radius { get; set; } = 0;
+        public float radius { get; set; } = 0f;
+        private DxSprite _sprite;
         /// <summary>
         /// 精灵图
         /// </summary>
-        public DxSprite sprite { get; set; }
+        public DxSprite sprite
+        {
+            get
+            {
+                return _sprite;
+            }
+            set
+            {
+                _sprite = value;
+                picCenter = _sprite.center;
+            }
+        }
+        private int _spriteIndex = 0;
+        /// <summary>
+        /// 精灵图索引
+        /// </summary>
+        public int spriteIndex
+        {
+            get
+            {
+                return _spriteIndex;
+            }
+            set
+            {
+                _spriteIndex = value;
+            }
+        }
         /// <summary>
         /// 这个实体本身是什么碰撞类型
         /// </summary>
@@ -379,22 +438,29 @@ namespace TDAjam
         /// </summary>
         public virtual void Draw()
         {
-            sprite.DrawCellSprite((int)position.posX, (int)position.posY);
+            PointF pf = position.toPointFAbs();
+            if (sprite != null)
+            {
+                sprite.SetCenter(picCenter.X, picCenter.Y);
+                sprite.SetIndex(_spriteIndex);
+                sprite.DrawCellSprite((int)pf.X, (int)pf.Y);
+            }
+            else
+                DX.DrawPixel((int)pf.X, (int)pf.Y, (uint)Color.SkyBlue.ToArgb());
         }
     }
     [Serializable]
     internal class Particle : Entity
     {
-        public Particle(IVector speed, Position pos, float rad = 0) : base(pos, rad)
-        {
-            velocity = speed;
-            entityType = CollisionTargetType.particle;
-        }
-
         /// <summary>
         /// 速度
         /// </summary>
         public IVector velocity { get; set; }
+        /// <summary>
+        /// 加速度
+        /// </summary>
+        public IVector acceleration { get; set; }
+        public float spriteAngle { get; set; } = 0f;
         /// <summary>
         /// 是否使用DxSingleAnimation类绘制
         /// </summary>
@@ -404,13 +470,62 @@ namespace TDAjam
         /// </summary>
         public DxSingleAnimation animation { get; set; } = null;
 
+        public Particle(IVector speed, Position pos, float rad = 0f) : base(pos, rad)
+        {
+            velocity = speed;
+            entityType = CollisionTargetType.particle;
+        }
+
+
         /// <summary>
         /// 叠加速度。类似差分机和帧Based原理，改变当前粒子移速。
         /// </summary>
-        /// <param name="deltaTime">距离上一次操作的时间差，单位毫秒</param>
+        /// <param name="deltaTime">距离上一次操作的时间差，单位tick</param>
         public void ApplyVelocity(long deltaTime)
         {
-            position.Move(velocity.X * deltaTime / 1000, velocity.Y * deltaTime / 1000);
+            position.Move(velocity.X * deltaTime / 1000000, velocity.Y * deltaTime / 1000000);
+        }
+        /// <summary>
+        /// 叠加速度。类似差分机和帧Based原理，改变当前粒子移速。deltaTime默认为DXcs.deltaTime。
+        /// </summary>
+        public void ApplyVelocity()
+        {
+            position.Move(velocity.X * DXcs.deltaTime / 1000000, velocity.Y * DXcs.deltaTime / 1000000);
+        }
+        /// <summary>
+        /// 叠加加速度，与叠加速度同理。
+        /// </summary>
+        /// <param name="deltaTime">距离上一次操作的时间差，单位tick</param>
+        public void ApplyAcceleration(long deltaTime)
+        {
+            //判断是Vec还是PolVec
+            if (acceleration.vectorType == VectorType.Vector)
+            {
+                velocity.X += acceleration.X * deltaTime / 1000000;
+                velocity.Y += acceleration.Y * deltaTime / 1000000;
+            }
+            else
+            {
+                velocity.Angle += acceleration.Angle * deltaTime / 1000000;
+                velocity.Length += acceleration.Length * deltaTime / 1000000;
+            }
+        }
+        /// <summary>
+        /// 叠加加速度，与叠加速度同理。deltaTime默认为DXcs.deltaTime。
+        /// </summary>
+        public void ApplyAcceleration()
+        {
+            //判断是Vec还是PolVec
+            if (acceleration.vectorType == VectorType.Vector)
+            {
+                velocity.X += acceleration.X * DXcs.deltaTime / 1000000;
+                velocity.Y += acceleration.Y * DXcs.deltaTime / 1000000;
+            }
+            else
+            {
+                velocity.Angle += acceleration.Angle * DXcs.deltaTime / 1000000;
+                velocity.Length += acceleration.Length * DXcs.deltaTime / 1000000;
+            }
         }
         /// <summary>
         /// 绘制
@@ -419,23 +534,86 @@ namespace TDAjam
         {
             if (useAnimation)
                 animation.DrawAnimationFrame((int)position.posX, (int)position.posY);
-            //WIP
+            //TODO
             else
-                base.Draw();
+                sprite?.SetAngle(spriteAngle + velocity.Angle);
+            base.Draw();
         }
     }
     [Serializable]
-    internal class Bullet : Particle
+    internal class Bullet : Particle, IDisposable
     {
-        public Bullet(IVector speed, Position pos, float rad = 0) : base(speed, pos, rad)
-        {
-            entityType = CollisionTargetType.bullet;
-        }
-
+        /// <summary>
+        /// 伤害值，默认1f
+        /// </summary>
+        public float damage { get; set; } = 1f;
+        /// <summary>
+        /// 目标分组，默认敌方，2
+        /// </summary>
+        public int targetGroup { get; set; } = 2;
+        /// <summary>
+        /// 穿透次数限制，默认1
+        /// </summary>
+        public int pierceTimes { get; set; } = 1;
+        /// <summary>
+        /// 已经穿透的次数，默认0
+        /// </summary>
+        public int pierceCount { get; set; } = 0;
+        /// <summary>
+        /// 发射者
+        /// </summary>
+        public Creature launcher { get; }
         public enum BulletType
         {
             normal = 0
-            //WIP
+            //TODO
+        }
+
+        public Bullet(Creature launcher, IVector speed, Position pos, float rad = 0) : base(speed, pos, rad)
+        {
+            this.launcher = launcher;
+            entityType = CollisionTargetType.bullet;
+        }
+
+        public bool CheckHit(Entity ent)
+        {
+            CollisionField cf;
+            switch (shape)
+            {
+                case EntityShape.rect:
+                    cf = new RectCollisionField(position, radius * 2, radius * 2);
+                    break;
+                case EntityShape.round:
+                    cf = new RoundCollisionField(position, radius);
+                    break;
+                case EntityShape.fan:
+                    cf = new FanCollisionField(position, radius, 0f, 0f);//TODO
+                    break;
+                case EntityShape.ellipse:
+                    cf = new EllipseCollisionField(position);//TODO
+                    break;
+                default:
+                    throw new Exception("not a valid entity shape!");
+            }
+            return cf.CollideWith(ent);
+        }
+        public void Hit(Creature _creature)
+        {
+            //default changes to crt and this
+            //TODO
+
+            //raise event
+            HitEvent?.Invoke(_creature);
+
+            //dispose
+            Dispose();
+        }
+        public delegate void HitEventHandler(Creature _creature);
+        public event HitEventHandler HitEvent;
+
+        public void Dispose()
+        {
+
         }
     }
     [Serializable]
@@ -487,6 +665,9 @@ namespace TDAjam
         }
     }
 
+
+    #endregion
+    #region Collison
     /// <summary>
     /// 判定域类
     /// </summary>
@@ -742,13 +923,13 @@ namespace TDAjam
 
     public enum CollisionTargetType
     {
-        none    = 0,
+        none = 0,
         particle = 1,
-        bullet  = 2,
+        bullet = 2,
         breakable = 4,
-        player  = 8,
-        mob     = 16,
-        boss    = 32,
+        player = 8,
+        mob = 16,
+        boss = 32,
         creature = 64
     }
     [Serializable]
@@ -780,4 +961,89 @@ namespace TDAjam
         }
     }
 
+    #endregion
+    #region Map
+    /// <summary>
+    /// 地图类
+    /// </summary>
+    [Serializable]
+    internal class Map
+    {
+        public TileSets tileSets { get; set; } = null;
+        public Size mapSize { get; set; } = new Size(1, 1);
+        public int mapWidth => mapSize.Width;
+        public int mapHeight => mapSize.Height;
+        public int layerCount => layers.Count;
+        public List<MapLayer> layers { get; private set; } = null;
+
+        public Map(TileSets tileSets, Size mapSize)
+        {
+            this.tileSets = tileSets;
+            this.mapSize = mapSize;
+        }
+
+        public bool addLayer(MapLayer layer)
+        {
+            try
+            {
+                layers.Add(layer);
+            }
+            catch(Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+                return false;
+            }
+            return true;
+        }
+    }
+    /// <summary>
+    /// 地图层
+    /// </summary>
+    [Serializable]
+    internal class MapLayer
+    {
+        public Map mapRef { get; } = null;
+        public int layerID { get; private set; } = 0;
+        public List<Tile> tileData { get; set; } = null;
+
+        public MapLayer(ref Map mapRef)
+        {
+            this.mapRef = mapRef;
+            this.layerID = mapRef.layerCount;
+            mapRef.addLayer(this);
+        }
+    }
+    /// <summary>
+    /// 地图块
+    /// </summary>
+    [Serializable]
+    internal class Tile
+    {
+
+    }
+    /// <summary>
+    /// 地图块元数据组
+    /// </summary>
+    [Serializable]
+    internal class TileSets
+    {
+        public DxSprite setsSprite { get; private set; } = null;
+        public int setsRow => setsSprite.sliceCountY;
+        public int setsColumm => setsSprite.sliceCountX;
+        public List<Tile> tiles { get; set; } = null;
+
+        public TileSets(DxSprite setsSprite)
+        {
+            this.setsSprite = setsSprite;
+            tiles.Clear();
+            for (int i = 0; i < setsSprite.cellCount; i++)
+            {
+                Tile t = new Tile();
+                tiles.Add(t);
+            }
+            if (tiles.Count != setsSprite.cellCount)
+                throw new Exception("tileSets初始化错误");
+        }
+    }
+    #endregion
 }

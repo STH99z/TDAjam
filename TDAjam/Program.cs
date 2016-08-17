@@ -20,18 +20,11 @@ namespace TDAjam
             DXcs.InitForm("TouhouDungeonAdventure_Jam", true);
 
 #if DEBUG
-            //TestingUnit.TestSprite();
-            //TestingUnit.TestSpriteZ();
-            //TestingUnit.TestSingleAnimation();
-            //TestingUnit.TestingInput();
-            //TestingUnit.TestingClocking();
-            //TestingUnit.TestingAudio();
-            //TestingUnit.Tt_Position();
-            TestingUnit.Tt_Math();
+            TestingUnit.Tt_IVector();
 #endif
 
             DXcs.DisposeAll();
-            DX.DxLib_End();
+            //DX.DxLib_End();
         }
     }
 #if DEBUG
@@ -86,7 +79,7 @@ namespace TDAjam
             {
                 charalist[i] = new DxImage(@"RES\chara\chara_" + string.Format("{0:D2}", i + 1) + ".png");
             }
-            DxSprite sp1 = new DxSprite(charalist[0], 3, 5);    
+            DxSprite sp1 = new DxSprite(charalist[0], 3, 5);
             int[] face = { 7, 10, 13, 10, 7, 4, 1, 4 };
             int count = 1, speed = 4000;
             double rollang = Math.PI;
@@ -123,15 +116,15 @@ namespace TDAjam
                         }
                     }
                     DxLayer.Close();
-                    if(false)
-                    {
-                        DXcs.DrawDebug("AntiAliasing Test");
-                        DXcs.DrawDebug("Z test");
-                        DXcs.DrawDebug("c=" + DxLayer.compareTimes + " times");
-                        DXcs.DrawDebug("s=" + DxLayer.sortingTime + "ms");
-                        DXcs.DrawDebug("d=" + DxLayer.drawingTime + "ms");
-                        DXcs.DrawDebug("f=" + DXcs.deltaTime / 10000f + "ms");
-                    }
+                    //if (false)
+                    //{
+                    //    DXcs.DrawDebug("AntiAliasing Test");
+                    //    DXcs.DrawDebug("Z test");
+                    //    DXcs.DrawDebug("c=" + DxLayer.compareTimes + " times");
+                    //    DXcs.DrawDebug("s=" + DxLayer.sortingTime + "ms");
+                    //    DXcs.DrawDebug("d=" + DxLayer.drawingTime + "ms");
+                    //    DXcs.DrawDebug("f=" + DXcs.deltaTime / 10000f + "ms");
+                    //}
                 }
                 DXcs.FrameEnd();
             }
@@ -287,7 +280,7 @@ namespace TDAjam
         public static void Tt_Math()
         {
             DXcs.fpsLimit = 120f;
-            while(DXcs.IsWindowOpen () && !DXcs.IsKeyDown (DX.KEY_INPUT_ESCAPE ))
+            while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
                 DXcs.FrameBegin();
                 int x, y;
@@ -323,8 +316,8 @@ namespace TDAjam
                         DXcs.Sin(a2, DXcs.PI2f, 100, DXcs.centerY),
                         Color.White);
                 }
-                Entity ent = new Entity {position = new Position(x, y)};
-                if(fcf.CollideWith (ent))
+                Entity ent = new Entity(new Position(x, y), 3);
+                if (fcf.CollideWith(ent))
                     DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Blue, 1);
                 else
                     DXcs.DrawBox(x - 3, y - 3, x + 3, y + 3, Color.Red, 1);
@@ -334,6 +327,44 @@ namespace TDAjam
                     GC.Collect();
             }
         }
+        public static void Tt_IVector()
+        {
+            DXcs.fpsLimit = 120f;
+            List<Particle> col = new List<Particle>();
+            DxSprite spr = new DxSprite(new DxImage(@"RES\dmk16.png"), 16, 12);
+            for (int i = 0; i < 128; ++i)
+            {
+                col.Add(new Particle(new PolarVector2D(
+                    (float)DXcs.Scale(i, 0, 128, 0, DXcs.PI2 * 7),
+                    (float)DXcs.Scale(i, 0, 128, 0, 128) % 7 + 3),
+                    new Position(DXcs.centerX, DXcs.centerY))
+                {
+                    acceleration = new PolarVector2D(0.1f, .0f),
+                    sprite = spr,
+                    spriteIndex = i % 8 + 7 * 16,
+                    spriteAngle = DXcs.PIf / 2
+                });
+            }
+            //DX.WaitKey();
+            while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
+            {
+                int c = 0;
+                DXcs.FrameBegin();
+                DXcs.DrawDebug(DXcs.deltaTimef );
+                col.ForEach(new Action<Particle>((Particle p) =>
+                {
+                    p.ApplyVelocity();
+                    p.ApplyAcceleration();
+                }));
+                col.ForEach(new Action<Particle>((Particle p) =>
+                {
+                    p.Draw();
+                }));
+                DXcs.FrameEnd();
+            }
+            col.Clear();
+        }
+
     }
 #endif
 }

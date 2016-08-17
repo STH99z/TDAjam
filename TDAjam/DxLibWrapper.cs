@@ -242,6 +242,11 @@ namespace TDAjam
         public PointF scale
         {
             get { return new PointF(scaleX, scaleY); }
+            set
+            {
+                scaleX = value.X;
+                scaleY = value.Y;
+            }
         }
         public PointF slice
         {
@@ -662,7 +667,8 @@ namespace TDAjam
         public static int resWidth { get; set; }
         public static int resHeight { get; set; }
         public static long nowTime { get; set; }
-        public static long deltaTime { get; set; }
+        public static long deltaTime { get; private set; }
+        public static float deltaTimef { get { return deltaTime / 10000f; } }
         public static Size[] frmSize { get; }
         public static int defaultSizeIndex { get; set; } = 6;
         public static int centerX => resWidth / 2;
@@ -782,23 +788,25 @@ namespace TDAjam
             value += destStart;
             return value;
         }
-        public static double SinD(double value, double period, double scale, double offset = 0d)
+        public static double SinD(double value, double period = PI2, double scale = 1, double offset = 0d)
             => Math.Sin(value / period * Math.PI * 2) * scale + offset;
-        public static double CosD(double value, double period, double scale, double offset = 0d)
+        public static double CosD(double value, double period = PI2, double scale = 1, double offset = 0d)
             => Math.Cos(value / period * Math.PI * 2) * scale + offset;
-        public static double TanD(double value, double period, double scale, double offset = 0d)
+        public static double TanD(double value, double period = PI2, double scale = 1, double offset = 0d)
             => Math.Tan(value / period * Math.PI * 2) * scale + offset;
-        public static int Sin(double value, double period, double scale, double offset = 0d)
+        public static int Sin(double value, double period = PI2, double scale = 1, double offset = 0d)
             => (int)SinD(value, period, scale, offset);
-        public static int Cos(double value, double period, double scale, double offset = 0d)
+        public static int Cos(double value, double period = PI2, double scale = 1, double offset = 0d)
             => (int)CosD(value, period, scale, offset);
-        public static int Tan(double value, double period, double scale, double offset = 0d)
+        public static int Tan(double value, double period = PI2, double scale = 1, double offset = 0d)
             => (int)TanD(value, period, scale, offset);
         public static float Pow2(float a) 
             => a * a;
+        public static float Pow2(double a)
+            => (float)(a * a);
         public static float Pow3(float a) 
             => a * a * a;
-        public static float Sqrt(float a) 
+        public static float Sqrt(double a)
             => (float)Math.Sqrt(a);
         public static float GetDistance(float x, float y)
             => (float)Math.Sqrt(x * x + y * y);
