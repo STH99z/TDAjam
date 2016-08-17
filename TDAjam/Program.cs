@@ -20,7 +20,8 @@ namespace TDAjam
             DXcs.InitForm("TouhouDungeonAdventure_Jam", true);
 
 #if DEBUG
-            TestingUnit.Tt_IVector();
+            //TestingUnit.Tt_IVector();
+            TestingUnit.Tt_Map();
 #endif
 
             DXcs.DisposeAll();
@@ -365,6 +366,30 @@ namespace TDAjam
             col.Clear();
         }
 
+        public static void Tt_Map()
+        {
+            DxImage imgtest = new DxImage(@"RES\map\test.png");
+            DxSprite mapsetsSprite = new DxSprite(imgtest, 2, 1);
+            TileSets ts = new TileSets(mapsetsSprite);
+            ts.tiles[1].collisionTarget = new CollisionTarget(CollisionTargetEnum.none);
+
+            while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
+            {
+                DXcs.FrameBegin();
+                DXcs.DrawDebug(DXcs.deltaTimef );
+                DXcs.DrawDebug(ts.tiles.Count);
+
+                for (int y = 0; y < 5; y++)
+                {
+                    for (int x = 0; x < 5; x++)
+                    {
+                        ts.tiles[(x + y) % 2].Draw(50 + x * 32, 50 + y * 32);
+                    }
+                }
+
+                DXcs.FrameEnd();
+            }
+        }
     }
 #endif
 }

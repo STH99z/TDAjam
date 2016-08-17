@@ -421,11 +421,11 @@ namespace TDAjam
         /// <summary>
         /// 这个实体本身是什么碰撞类型
         /// </summary>
-        public CollisionTargetType entityType { get; set; } = CollisionTargetType.none;
+        public CollisionTargetEnum entityType { get; set; } = CollisionTargetEnum.none;
         /// <summary>
         /// 这个实体要和其他的什么类型碰撞
         /// </summary>
-        public CollisionType collisionType { get; set; } = new CollisionType(CollisionTargetType.none);
+        public CollisionTarget collisionType { get; set; } = new CollisionTarget(CollisionTargetEnum.none);
 
         public Entity(Position pos, float rad = 0f)
         {
@@ -473,7 +473,7 @@ namespace TDAjam
         public Particle(IVector speed, Position pos, float rad = 0f) : base(pos, rad)
         {
             velocity = speed;
-            entityType = CollisionTargetType.particle;
+            entityType = CollisionTargetEnum.particle;
         }
 
 
@@ -572,7 +572,7 @@ namespace TDAjam
         public Bullet(Creature launcher, IVector speed, Position pos, float rad = 0) : base(speed, pos, rad)
         {
             this.launcher = launcher;
-            entityType = CollisionTargetType.bullet;
+            entityType = CollisionTargetEnum.bullet;
         }
 
         public bool CheckHit(Entity ent)
@@ -621,7 +621,7 @@ namespace TDAjam
     {
         public Breakable(Position pos, float rad = 0) : base(new Vector2D(0, 0), pos, rad)
         {
-            entityType = CollisionTargetType.breakable;
+            entityType = CollisionTargetEnum.breakable;
         }
     }
     [Serializable]
@@ -629,7 +629,7 @@ namespace TDAjam
     {
         public Creature(Position pos, float rad = 0) : base(pos, rad)
         {
-            entityType = CollisionTargetType.creature;
+            entityType = CollisionTargetEnum.creature;
             group = 0;
         }
 
@@ -643,7 +643,7 @@ namespace TDAjam
     {
         public Player(Position pos, float rad = 0) : base(pos, rad)
         {
-            entityType = CollisionTargetType.player;
+            entityType = CollisionTargetEnum.player;
             group = 1;
         }
     }
@@ -652,7 +652,7 @@ namespace TDAjam
     {
         public Mob(Position pos, float rad = 0) : base(pos, rad)
         {
-            entityType = CollisionTargetType.mob;
+            entityType = CollisionTargetEnum.mob;
             group = 2;
         }
     }
@@ -661,7 +661,7 @@ namespace TDAjam
     {
         public Boss(Position pos, float rad = 0) : base(pos, rad)
         {
-            entityType = CollisionTargetType.boss;
+            entityType = CollisionTargetEnum.boss;
         }
     }
 
@@ -921,7 +921,7 @@ namespace TDAjam
         }
     }
 
-    public enum CollisionTargetType
+    public enum CollisionTargetEnum
     {
         none = 0,
         particle = 1,
@@ -933,19 +933,25 @@ namespace TDAjam
         creature = 64
     }
     [Serializable]
-    internal class CollisionType
+    internal class CollisionTarget
     {
         public byte collisionWith = 0;
-        public CollisionType(CollisionTargetType ctt_addable)
+        /// <summary>
+        /// 构造一个碰撞目标
+        /// </summary>
+        /// <param name="ctt_addable">将要判定碰撞的对象种类，可用|连接多个</param>
+        public CollisionTarget(CollisionTargetEnum ctt_addable)
         {
             collisionWith = (byte)ctt_addable;
+            if (collisionWith > 127)
+                throw new Exception($"构造碰撞目标出错，当前collisionWith值为{collisionWith}。");
         }
         /// <summary>
         /// 获取或设置是否发生碰撞
         /// </summary>
         /// <param name="ctt">碰撞体类型</param>
         /// <returns></returns>
-        public bool this[CollisionTargetType ctt]
+        public bool this[CollisionTargetEnum ctt]
         {
             set
             {
@@ -1004,7 +1010,7 @@ namespace TDAjam
     {
         public Map mapRef { get; } = null;
         public int layerID { get; private set; } = 0;
-        public List<Tile> tileData { get; set; } = null;
+        public List<Tile> tileData { get; set; } = new List<Tile>();
 
         public MapLayer(ref Map mapRef)
         {
@@ -1019,6 +1025,69 @@ namespace TDAjam
     [Serializable]
     internal class Tile
     {
+        public enum TileShape
+        {
+            rectangle = 0,
+            circle,
+            outerCircleLT,
+            outerCircleRT,
+            outerCircleLB,
+            outerCircleRB,
+            innerCircleLT,
+            innerCircleRT,
+            innerCircleLB,
+            innerCircleRB
+        }
+        /// <summary>
+        /// 形状
+        /// </summary>
+        public TileShape shape { get; set; } = TileShape.rectangle;
+        /// <summary>
+        /// 碰撞对象，默认是墙体，所以全碰撞
+        /// </summary>
+        public CollisionTarget collisionTarget { get; set; } = new CollisionTarget(
+            CollisionTargetEnum.particle | CollisionTargetEnum.bullet |
+            CollisionTargetEnum.creature | CollisionTargetEnum.player |
+            CollisionTargetEnum.mob | CollisionTargetEnum.boss);
+        /// <summary>
+        /// 组内ID
+        /// </summary>
+        public int IDinSets { get; private set; } = 0;
+        public TileSets setsRef { get; set; } = null;
+
+        public Tile(int IDinSets, TileSets setsRef)
+        {
+            this.IDinSets = IDinSets;
+            this.setsRef = setsRef;
+        }
+        public void Draw(int x, int y)
+        {
+            setsRef.setsSprite.SetIndex(IDinSets);
+            setsRef.setsSprite.DrawCellSprite(x, y);
+        }
+#if DEBUG
+        public void DrawCollisionTarget(int x, int y)
+        {
+            DXcs.DrawText(x, y, collisionTarget.collisionWith.ToString(), Color.White);
+        }
+#endif
+
+        public static bool isTileShapeRegular(TileShape shape)
+        {
+            return (byte)shape < 2;
+        }
+        public static bool isTileShapeQuarterCircle(TileShape shape)
+        {
+            return (byte)shape > 1;
+        }
+        public static bool isTileShapeInnerCircle(TileShape shape)
+        {
+            return (byte)shape > 1 && (byte)shape < 6;
+        }
+        public static bool isTileShapeOuterCircle(TileShape shape)
+        {
+            return (byte)shape > 5;
+        }
 
     }
     /// <summary>
@@ -1030,7 +1099,7 @@ namespace TDAjam
         public DxSprite setsSprite { get; private set; } = null;
         public int setsRow => setsSprite.sliceCountY;
         public int setsColumm => setsSprite.sliceCountX;
-        public List<Tile> tiles { get; set; } = null;
+        public List<Tile> tiles { get; set; } = new List<Tile>();
 
         public TileSets(DxSprite setsSprite)
         {
@@ -1038,7 +1107,7 @@ namespace TDAjam
             tiles.Clear();
             for (int i = 0; i < setsSprite.cellCount; i++)
             {
-                Tile t = new Tile();
+                Tile t = new Tile(i, this);
                 tiles.Add(t);
             }
             if (tiles.Count != setsSprite.cellCount)
