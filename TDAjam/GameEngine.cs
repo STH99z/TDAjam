@@ -1036,7 +1036,11 @@ namespace TDAjam
             innerCircleLT,
             innerCircleRT,
             innerCircleLB,
-            innerCircleRB
+            innerCircleRB,
+            slopeLT,
+            slopeRT,
+            slopeLB,
+            slopeRB
         }
         /// <summary>
         /// 形状
@@ -1086,7 +1090,11 @@ namespace TDAjam
         }
         public static bool isTileShapeOuterCircle(TileShape shape)
         {
-            return (byte)shape > 5;
+            return (byte)shape > 5 && (byte)shape < 10;
+        }
+        public static bool isTileShapeSlope(TileShape shape)
+        {
+            return (byte)shape > 9;
         }
 
     }
