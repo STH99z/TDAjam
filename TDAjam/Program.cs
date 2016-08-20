@@ -368,22 +368,23 @@ namespace TDAjam
 
         public static void Tt_Map()
         {
-            DxImage imgtest = new DxImage(@"RES\map\test.png");
-            DxSprite mapsetsSprite = new DxSprite(imgtest, 2, 1);
-            TileSets ts = new TileSets(mapsetsSprite);
-            ts.tiles[1].collisionTarget = new CollisionTarget(CollisionTargetEnum.none);
-
+            TileSets ts = new TileSets(@"RES\map\TileShapeEnum.xml");
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
                 DXcs.FrameBegin();
-                DXcs.DrawDebug(DXcs.deltaTimef );
+                DXcs.DrawDebug(DXcs.deltaTimef);
                 DXcs.DrawDebug(ts.tiles.Count);
-
-                for (int y = 0; y < 5; y++)
+                
+                for (int i = 0; i < 2; i++)
                 {
-                    for (int x = 0; x < 5; x++)
+                    ts.tiles[i].Draw(110 + i * 32,64);
+                }
+                for (int i = 0; i < 4; i++)
+                {
+                    for (int j = 0; j < 3; j++)
                     {
-                        ts.tiles[(x + y) % 2].Draw(50 + x * 32, 50 + y * 32);
+                        ts.tiles[4 + i + j * 4].Draw(110 + i % 2 * 32, 96 + j * 64 + i / 2 * 32);
+                        DXcs.DrawText(12 + i % 2 * 160, 80 + j * 64 + i / 2 * 32, ((Tile.TileShape)(2 + i + j * 4)).ToString(), Color.Azure );
                     }
                 }
 

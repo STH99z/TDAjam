@@ -5,6 +5,8 @@ using System.Text;
 using System.Drawing;
 using DxLibDLL;
 using System.Runtime.InteropServices;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace TDAjam
 {
@@ -1027,7 +1029,7 @@ namespace TDAjam
     {
         public enum TileShape
         {
-            rectangle = 0,
+            square = 0,
             circle,
             outerCircleLT,
             outerCircleRT,
@@ -1045,7 +1047,7 @@ namespace TDAjam
         /// <summary>
         /// 形状
         /// </summary>
-        public TileShape shape { get; set; } = TileShape.rectangle;
+        public TileShape shape { get; set; } = TileShape.square;
         /// <summary>
         /// 碰撞对象，默认是墙体，所以全碰撞
         /// </summary>
@@ -1120,6 +1122,79 @@ namespace TDAjam
             }
             if (tiles.Count != setsSprite.cellCount)
                 throw new Exception("tileSets初始化错误");
+        }
+        public TileSets(string xmlFilepath)
+        {
+            OpenFromXml(xmlFilepath);
+        }
+        public bool OpenFromXml(string xmlFilepath)
+        {
+            try
+            {
+                tiles?.Clear();
+                setsSprite?.image?.UnloadImage();
+                var xDoc = XDocument.Load(xmlFilepath);
+                var xTS = xDoc.Element("TileSets");
+                DxImage img = new DxImage(xTS.Element("setsSprite").Value);
+                DxSprite spr = new DxSprite(
+                    img,
+                    int.Parse(xTS.Element("setsRow").Value),
+                    int.Parse(xTS.Element("setsColumn").Value)
+                    );
+                setsSprite = spr;
+                if (xTS.Element("tiles").Elements().Count() != spr.cellCount) throw new Exception("xml节点数量缺失");
+                foreach (var xTile in xTS.Element("tiles").Elements())
+                {
+                    Tile t = new Tile(int.Parse(xTile.Attribute("id").Value), this);
+                    t.shape = (Tile.TileShape)int.Parse(xTile.Element("shape").Value);
+                    t.collisionTarget = new CollisionTarget((CollisionTargetEnum)int.Parse(xTile.Element("collisionTarget").Value));
+                    tiles.Add(t);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show($"{ex.Data }\n{ex.Message }\n{ex.StackTrace }");
+                System.Windows.Forms.MessageBox.Show("从xml打开TileSets失败");
+                return false;
+            }
+            return true;
+        }
+        public bool SaveToXml(string xmlFilepath)
+        {
+            try
+            {
+                XElement eTiles = new XElement("tiles");
+                for (int i = 0; i < setsSprite.cellCount; i++)
+                {
+                    XElement eTile = new XElement(
+                        "tile",
+                        new XElement("shape", new XText(((int)tiles[i].shape).ToString())),
+                        new XElement("collisionTarget", new XText(tiles[i].collisionTarget.collisionWith.ToString()))
+                        );
+                    eTile.SetAttributeValue("id", i.ToString());
+                    eTiles.Add(eTile);
+                }
+                var xDoc = new XDocument(
+                    new XDeclaration("1.0", "utf-8", null),
+                    new XElement("TileSets",
+                        new XElement("setsSprite", new XText(setsSprite.image.uri)),
+                        new XElement("setsRow", new XText(setsRow.ToString())),
+                        new XElement("setsColumn", new XText(setsColumm.ToString())),
+                        eTiles
+                        )
+                    );
+                xDoc.Save(xmlFilepath);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show($"{ex.Data }\n{ex.Message }\n{ex.StackTrace }");
+                System.Windows.Forms.MessageBox.Show("保存失败");
+                return false;
+            }
+#if DEBUG
+            System.Windows.Forms.MessageBox.Show("保存TileSets到xml成功");
+#endif
+            return true;
         }
     }
     #endregion

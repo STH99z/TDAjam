@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TileSets>
+  <setsSprite>RES\map\TileShapeEnum.png</setsSprite>
+  <setsRow>4</setsRow>
+  <setsColumm>4</setsColumm>
+  <tiles>
+    <tile id="0">
+      <shape>0</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="1">
+      <shape>1</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="2">
+      <shape>0</shape>
+      <collisionTarget>0</collisionTarget>
+    </tile>
+    <tile id="3">
+      <shape>0</shape>
+      <collisionTarget>0</collisionTarget>
+    </tile>
+    <tile id="4">
+      <shape>2</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="5">
+      <shape>3</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="6">
+      <shape>4</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="7">
+      <shape>5</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="8">
+      <shape>6</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="9">
+      <shape>7</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="10">
+      <shape>8</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="11">
+      <shape>9</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="12">
+      <shape>10</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="13">
+      <shape>11</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="14">
+      <shape>12</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+    <tile id="15">
+      <shape>13</shape>
+      <collisionTarget>123</collisionTarget>
+    </tile>
+  </tiles>
+</TileSets>

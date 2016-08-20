@@ -660,6 +660,8 @@ namespace TDAjam
     {
         private const bool DEBUGMODE = true;
         private const int use3Dmode = 0;
+        public static int drawDebugFontSize { get; set; } = 20;
+        public static int drawTextFontSize { get; set; } = 11;
         public static float fpsLimit { get; set; } = 60f;
         public static Random rnd { get; }
         public static int frmWidth { get; set; }
@@ -765,17 +767,21 @@ namespace TDAjam
         }
         public static void DrawText(int x, int y, string str, Color col)
         {
+            DX.SetFontSize(drawTextFontSize);
             DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
             DX.DrawString(x, y, str, (uint)col.ToArgb());
         }
         public static void DrawText<T>(int x, int y, T infoToDraw, Color col)
         {
+            DX.SetFontSize(drawTextFontSize);
             DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, col.A);
             DX.DrawString(x, y, infoToDraw.ToString(), (uint)col.ToArgb());
         }
         public static void DrawDebug<T>(T infoToDraw)
         {
-            DrawText<T>(0, _debugDrawIndex++ * fontHeight, infoToDraw, Color.White);
+            DX.SetFontSize(drawDebugFontSize);
+            DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255);
+            DX.DrawString(0, _debugDrawIndex++ * fontHeight, infoToDraw.ToString(), (uint)Color.White.ToArgb());
         }
 
         #endregion
