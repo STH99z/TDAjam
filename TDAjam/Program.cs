@@ -21,7 +21,7 @@ namespace TDAjam
 
 #if DEBUG
             //TestingUnit.Tt_IVector();
-            TestingUnit.Tt_Map();
+            TestingUnit.Tt_MapEdit();
 #endif
 
             DXcs.DisposeAll();
@@ -366,28 +366,64 @@ namespace TDAjam
             col.Clear();
         }
 
-        public static void Tt_Map()
+        public static void Tt_MapEdit()
         {
-            TileSets ts = new TileSets(@"RES\map\TileShapeEnum.xml");
+            //TileSets ts = new TileSets(@"RES\map\TileShapeEnum.xml");
+            //Map map = new Map(ts, new Size(10, 10));
+            //MapLayer layer = new MapLayer(map);
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    layer.tileData.Add(new Tile(DXcs.rnd.Next(ts.tiles.Count), ts));
+            //}
+
+            Point mp = new Point(-1, -1);
+            Point mp2 = new Point(0, 0);
+            Map map = new Map(@"RES\map\test10x10map.xml");
             while (DXcs.IsWindowOpen() && !DXcs.IsKeyDown(DX.KEY_INPUT_ESCAPE))
             {
                 DXcs.FrameBegin();
-                DXcs.DrawDebug(DXcs.deltaTimef);
-                DXcs.DrawDebug(ts.tiles.Count);
-                
-                for (int i = 0; i < 2; i++)
+
+                map.DrawMap();
+                //random
+                if(DXcs.IsKeyDownOnce(DX.KEY_INPUT_R))
                 {
-                    ts.tiles[i].Draw(110 + i * 32,64);
-                }
-                for (int i = 0; i < 4; i++)
-                {
-                    for (int j = 0; j < 3; j++)
+                    map.layers.Clear();
+                    MapLayer lay2 = new MapLayer(map);
+                    for (int i = 0; i < 100; i++)
                     {
-                        ts.tiles[4 + i + j * 4].Draw(110 + i % 2 * 32, 96 + j * 64 + i / 2 * 32);
-                        DXcs.DrawText(12 + i % 2 * 160, 80 + j * 64 + i / 2 * 32, ((Tile.TileShape)(2 + i + j * 4)).ToString(), Color.Azure );
+                        //lay2.tileData.Add(new Tile(DXcs.rnd.Next(ts.tiles.Count), ts));
                     }
                 }
+                //save
+                if (DXcs.IsKeyDownOnce(DX.KEY_INPUT_S))
+                {
+                    map.SaveToXml(@"RES\map\test10x10map.xml");
+                }
+                //change
+                mp2 = new Point((DXcs.mouseX - 134) / 32, (DXcs.mouseY) / 32);
+                if (DX.GetMouseInput() != 0)
+                {
+                    if (mp2 != mp)
+                    {
+                        int id = mp2.X + mp2.Y * map.mapSize.Width;
+                        int ids = map.layers[0].tileData[id].IDinSets + (DX.GetMouseInput() == 1 ? 1 : -1);
+                        if (ids < 0)
+                            ids += map.tileSets.tiles.Count;
+                        ids %= map.tileSets.tiles.Count;
+                        map.layers[0].tileData.RemoveAt(id);
+                        map.layers[0].tileData.Insert(id, new Tile(ids, map.tileSets));
+                        mp = mp2;
+                    }
+                }
+                else
+                {
+                    mp = new Point(-1, -1);
+                }
 
+                DXcs.DrawDebug(DXcs.frameTimef);
+                DXcs.DrawDebug(DXcs.deltaTimef);
+                DXcs.DrawDebug(DXcs.realTimeFps);
+                DXcs.DrawDebug(DXcs.mousePos);
                 DXcs.FrameEnd();
             }
         }

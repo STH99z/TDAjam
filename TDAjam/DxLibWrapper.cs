@@ -669,8 +669,11 @@ namespace TDAjam
         public static int resWidth { get; set; }
         public static int resHeight { get; set; }
         public static long nowTime { get; set; }
-        public static long deltaTime { get; private set; }
+        public static long frameTime { get; private set; }//帧计算用时
+        public static float frameTimef { get { return frameTime / 10000f; } }
+        public static long deltaTime { get; private set; }//帧时间
         public static float deltaTimef { get { return deltaTime / 10000f; } }
+        public static float realTimeFps { get { return 1000 / deltaTimef; } }
         public static Size[] frmSize { get; }
         public static int defaultSizeIndex { get; set; } = 6;
         public static int centerX => resWidth / 2;
@@ -718,6 +721,7 @@ namespace TDAjam
         {
             System.Windows.Forms.Application.DoEvents();
             DXcs.UpdateKeyStatus();
+            DXcs.UpdateMouseStatus();
             DX.SetDrawBlendMode(DX.DX_BLENDMODE_ALPHA, 255);
         }
         /// <summary>
@@ -964,23 +968,24 @@ namespace TDAjam
             nowTime = DateTime.Now.Ticks;
             return 1;
         }
-        public static long WaitFrameTime()
+        public static void WaitFrameTime()
         {
             //Not work in Vsync-mode
             if (DX.GetWaitVSyncFlag() == 0)
             {
-                long deltaTime;
-                while ((deltaTime = DateTime.Now.Ticks - nowTime) / 10000d < 1000f / fpsLimit)
-                {
-                    DX.WaitTimer(1);
-                }
-                DXcs.nowTime = DateTime.Now.Ticks;
-                DXcs.deltaTime = deltaTime;
+                long deltaTime, waittime;
+                deltaTime = DateTime.Now.Ticks - nowTime;
+                waittime = (long)(10000000 / fpsLimit) - deltaTime;
+                if (waittime > 0)
+                    DX.WaitTimer((int)waittime / 10000);
+                //DX.WaitTimer((int)waittime / 10000 - 1);
+
+                long now = DateTime.Now.Ticks;
+                DXcs.deltaTime = now - DXcs.nowTime;
+                DXcs.nowTime = now;
+                DXcs.frameTime = deltaTime;
                 _oneFrameCalcTimeBuf = DateTime.Now.Ticks;
-                return deltaTime;
             }
-            else
-                return 0;
         }
         public static void ClearGraphMemory()
         {
@@ -1034,6 +1039,20 @@ namespace TDAjam
         #endregion
 
         #region InputRelated
+        public static int mouseX
+        {
+            get { return _mouseX; }
+            private set { _mouseX = value; }
+        }
+        public static int mouseY
+        {
+            get { return _mouseY; }
+            private set { _mouseY = value; }
+        }
+        private static int _mouseX = 0;
+        private static int _mouseY = 0;
+        public static Point mousePos => new Point(_mouseX, _mouseY);
+
         /// <summary>
         /// 按键状态，外部访问通过函数，每帧通过UpdateKeyStatus更新
         /// </summary>
@@ -1084,6 +1103,28 @@ namespace TDAjam
                     if (!KeysHolding.Contains(i))
                         KeysHolding.Add(i);
             }
+        }
+        /// <summary>
+        /// 更新DXcs内存储的鼠标位置信息，默认每帧更新。
+        /// </summary>
+        public static void UpdateMouseStatus()
+        {
+            DX.GetMousePoint(out _mouseX, out _mouseY);
+        }
+        /// <summary>
+        /// 实时获取鼠标位置信息
+        /// </summary>
+        /// <param name="x">xBuf</param>
+        /// <param name="y">yBuf</param>
+        public static void GetMousePos(out int x, out int y)
+        {
+            DX.GetMousePoint(out x, out y);
+        }
+        public static Point GetMousePos()
+        {
+            int x, y;
+            DX.GetMousePoint(out x, out y);
+            return new Point(x, y);
         }
 
         #endregion

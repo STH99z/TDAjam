@@ -982,14 +982,24 @@ namespace TDAjam
         public int mapWidth => mapSize.Width;
         public int mapHeight => mapSize.Height;
         public int layerCount => layers.Count;
-        public List<MapLayer> layers { get; private set; } = null;
+        public List<MapLayer> layers { get; private set; } = new List<MapLayer>();
+        public string xmlFilepath { get; set; } = null;
 
         public Map(TileSets tileSets, Size mapSize)
         {
             this.tileSets = tileSets;
             this.mapSize = mapSize;
         }
+        public Map (string xmlFilepath)
+        {
+            OpenFromXml(xmlFilepath);
+        }
 
+        /// <summary>
+        /// 添加一个已有的地图层
+        /// </summary>
+        /// <param name="layer"></param>
+        /// <returns></returns>
         public bool addLayer(MapLayer layer)
         {
             try
@@ -1003,6 +1013,148 @@ namespace TDAjam
             }
             return true;
         }
+        /// <summary>
+        /// 添加一个空地图层
+        /// </summary>
+        /// <returns></returns>
+        public bool addLayer()
+        {
+            try
+            {
+                var la = new MapLayer(this);
+                layers.Add(la);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+                return false;
+            }
+            return false;
+        }
+        /// <summary>
+        /// 删除一个现有层
+        /// </summary>
+        /// <param name="layerID"></param>
+        /// <returns></returns>
+        public bool removeLayer(int layerID)
+        {
+            try
+            {
+                layers.RemoveAt(layerID);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return true;
+        }
+        /// <summary>
+        /// 从xml文件打开地图
+        /// </summary>
+        /// <param name="xmlFilepath">xml文件地址</param>
+        /// <returns></returns>
+        public bool SaveToXml(string xmlFilepath)
+        {
+            try
+            {
+                var xLayers = new XElement("layers");
+                for (int i = 0; i < layerCount; i++)
+                {
+                    var xLayer = new XElement("layer");
+                    xLayer.SetAttributeValue("id", i);
+                    var xTileData = new XElement("tileData");
+                    int j = 0;
+                    foreach (var tile in layers[i].tileData)
+                    {
+                        var xTile = new XElement("tile",
+                            new XElement("IDinSets", tile.IDinSets.ToString()));
+                        xTile.SetAttributeValue("id", j++);
+                        xTileData.Add(xTile);
+                    }
+                    xLayer.Add(xTileData);
+                    xLayers.Add(xLayer);
+                }
+                var xDoc = new XDocument(
+                    new XDeclaration("1.0", "utf-8", null),
+                    new XElement("Map",
+                        new XElement("tileSets", tileSets.xmlFilepath),
+                        new XElement("mapWidth", mapWidth.ToString()),
+                        new XElement("mapHeight", mapHeight.ToString()),
+                        new XElement("layerCount", layerCount.ToString()),
+                        xLayers)
+                    );
+                xDoc.Save(xmlFilepath);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            this.xmlFilepath = xmlFilepath;
+            return true;
+        }
+        /// <summary>
+        /// 保存地图到xml文件
+        /// </summary>
+        /// <param name="xmlFilepath">xml文件地址</param>
+        /// <returns></returns>
+        public bool OpenFromXml(string xmlFilepath)
+        {
+            try
+            {
+                layers?.Clear();
+                tileSets?.setsSprite?.image?.UnloadImage();
+                var xDoc = XDocument.Load(xmlFilepath);
+                var xMap = xDoc.Element("Map");
+                string tspath = xMap.Element("tileSets").Value;
+                int w = int.Parse(xMap.Element("mapWidth").Value);
+                int h = int.Parse(xMap.Element("mapHeight").Value);
+                if (tileSets == null)
+                    tileSets = new TileSets(tspath);
+                else
+                    tileSets.OpenFromXml(tspath);
+                this.mapSize = new Size(w, h);
+                var xLayers = xMap.Element("layers");
+                foreach (var xLayer in xLayers.Elements())
+                {
+                    MapLayer la = new MapLayer(this);
+                    foreach (var xTile in xLayer.Element("tileData").Elements())
+                    {
+                        int id = int.Parse(xTile.Element("IDinSets").Value);
+                        la.tileData.Add(new Tile(id, tileSets));
+                    }
+                    if (la.tileData.Count != w * h)
+                        throw new Exception($"layer {xLayer.Attribute("id").Value } 中的tile数量不够，现为{la.tileData.Count}个");
+                }
+                if (int.Parse(xMap.Element("layerCount").Value) != layers.Count)
+                    throw new Exception($"layer数量不够，现为{layers.Count }层");
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            this.xmlFilepath = xmlFilepath;
+            return true;
+        }
+
+        public void DrawMap(bool usingDxLayer = false)
+        {
+            if (usingDxLayer)
+            {
+                foreach (var layer in layers)
+                {
+                    DxLayer.Open();
+                    layer.DrawLayer();
+                    DxLayer.Close();
+                }
+            }
+            else
+            {
+                foreach (var layer in layers)
+                {
+                    layer.DrawLayer();
+                }
+            }
+        }
     }
     /// <summary>
     /// 地图层
@@ -1014,11 +1166,34 @@ namespace TDAjam
         public int layerID { get; private set; } = 0;
         public List<Tile> tileData { get; set; } = new List<Tile>();
 
-        public MapLayer(ref Map mapRef)
+        public MapLayer(Map mapRef)
         {
             this.mapRef = mapRef;
             this.layerID = mapRef.layerCount;
             mapRef.addLayer(this);
+        }
+        public void DrawLayer()
+        {
+            //TODO: camera view area cut
+            int x = 0, y = 0;
+            int w, h;
+            int cw, ch;
+            int scrw, scrh;
+            w = mapRef.mapSize.Width;
+            h = mapRef.mapSize.Height;
+            cw = (int)mapRef.tileSets.setsSprite.cellW;
+            ch = (int)mapRef.tileSets.setsSprite.cellH;
+            scrw = DXcs.resWidth;
+            scrh = DXcs.resHeight;
+            foreach (var tile in tileData)
+            {
+                tile.Draw(150 + x++ * cw, 16 + y * ch);
+                if (x == w)
+                {
+                    x = 0;
+                    y++;
+                }
+            }
         }
     }
     /// <summary>
@@ -1110,6 +1285,7 @@ namespace TDAjam
         public int setsRow => setsSprite.sliceCountY;
         public int setsColumm => setsSprite.sliceCountX;
         public List<Tile> tiles { get; set; } = new List<Tile>();
+        public string xmlFilepath { get; set; } = null;
 
         public TileSets(DxSprite setsSprite)
         {
@@ -1157,6 +1333,7 @@ namespace TDAjam
                 System.Windows.Forms.MessageBox.Show("从xml打开TileSets失败");
                 return false;
             }
+            this.xmlFilepath = xmlFilepath;
             return true;
         }
         public bool SaveToXml(string xmlFilepath)
@@ -1194,6 +1371,7 @@ namespace TDAjam
 #if DEBUG
             System.Windows.Forms.MessageBox.Show("保存TileSets到xml成功");
 #endif
+            this.xmlFilepath = xmlFilepath;
             return true;
         }
     }
